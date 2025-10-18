@@ -1,0 +1,81 @@
+# Copyright (C) 2025 MadSmiley
+# This file is distributed under the GPL v2 or later.
+msgid ""
+msgstr ""
+"Project-Id-Version: WP MailBridge 1.0.0\n"
+"Report-Msgid-Bugs-To: https://github.com/MadSmiley/WP-MailBridge/issues\n"
+"POT-Creation-Date: 2025-10-18 00:00+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: en\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: wp-mail-bridge.php
+msgid "MailBridge"
+msgstr ""
+
+msgid "Email Templates"
+msgstr ""
+
+msgid "Templates"
+msgstr ""
+
+msgid "Email Types"
+msgstr ""
+
+msgid "Logs"
+msgstr ""
+
+msgid "Settings"
+msgstr ""
+
+msgid "Add New"
+msgstr ""
+
+msgid "Edit Template"
+msgstr ""
+
+msgid "Template Name"
+msgstr ""
+
+msgid "Subject"
+msgstr ""
+
+msgid "Content"
+msgstr ""
+
+msgid "Language"
+msgstr ""
+
+msgid "Status"
+msgstr ""
+
+msgid "Active"
+msgstr ""
+
+msgid "Inactive"
+msgstr ""
+
+msgid "Save Template"
+msgstr ""
+
+msgid "Cancel"
+msgstr ""
+
+msgid "Delete"
+msgstr ""
+
+msgid "Are you sure you want to delete this template?"
+msgstr ""
+
+msgid "Template created successfully."
+msgstr ""
+
+msgid "Template updated successfully."
+msgstr ""
+
+msgid "Template deleted successfully."
+msgstr ""

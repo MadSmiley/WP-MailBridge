@@ -1,0 +1,197 @@
+/**
+ * Admin styles for MailBridge
+ *
+ * @package WP_MailBridge
+ */
+
+/* Empty state */
+.mailbridge-empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    background: #fff;
+    border: 1px solid #c3c4c7;
+    margin-top: 20px;
+}
+
+.mailbridge-empty-state p {
+    font-size: 16px;
+    color: #646970;
+    margin-bottom: 20px;
+}
+
+/* Status badges */
+.mailbridge-status-active {
+    display: inline-block;
+    padding: 3px 8px;
+    background: #00a32a;
+    color: #fff;
+    border-radius: 3px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.mailbridge-status-inactive {
+    display: inline-block;
+    padding: 3px 8px;
+    background: #dba617;
+    color: #fff;
+    border-radius: 3px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.mailbridge-status-success {
+    color: #00a32a;
+    font-weight: 600;
+}
+
+.mailbridge-status-failed {
+    color: #d63638;
+    font-weight: 600;
+}
+
+/* Variables info box */
+#mailbridge-variables-info {
+    background: #f0f0f1;
+    border-left: 4px solid #2271b1;
+    padding: 15px;
+    margin-top: 20px;
+}
+
+#mailbridge-variables-info h3 {
+    margin-top: 0;
+    color: #1d2327;
+}
+
+#mailbridge-variables-list {
+    margin-top: 10px;
+}
+
+#mailbridge-variables-list ul {
+    list-style: disc inside;
+    margin: 0;
+    padding: 0;
+}
+
+#mailbridge-variables-list li {
+    padding: 5px 0;
+}
+
+#mailbridge-variables-list code {
+    background: #fff;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-weight: 600;
+    color: #2271b1;
+}
+
+/* Info boxes */
+.mailbridge-info-box {
+    background: #fff;
+    border: 1px solid #c3c4c7;
+    padding: 20px;
+    margin-top: 30px;
+}
+
+.mailbridge-info-box h2 {
+    margin-top: 0;
+}
+
+.mailbridge-info-box pre {
+    background: #f0f0f1;
+    padding: 15px;
+    overflow-x: auto;
+    border-radius: 3px;
+}
+
+.mailbridge-info-box code {
+    font-family: Consolas, Monaco, monospace;
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+/* Info widgets */
+.mailbridge-info-widget {
+    background: #fff;
+    border: 1px solid #c3c4c7;
+    padding: 20px;
+}
+
+.mailbridge-info-widget h2 {
+    margin-top: 0;
+    font-size: 18px;
+    border-bottom: 1px solid #f0f0f1;
+    padding-bottom: 10px;
+}
+
+/* Table improvements */
+.wp-list-table code {
+    background: #f0f0f1;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 12px;
+}
+
+/* Button spacing */
+.mailbridge-delete-template {
+    margin-left: 5px;
+}
+
+/* Responsive tables */
+@media screen and (max-width: 782px) {
+    .wp-list-table td.column-primary {
+        padding-bottom: 0;
+    }
+
+    .wp-list-table td[data-colname]::before {
+        font-weight: 600;
+    }
+}
+
+/* Variables display toggle */
+.mailbridge-show-variables {
+    cursor: pointer;
+}
+
+/* Form descriptions */
+.form-table .description {
+    color: #646970;
+    font-size: 13px;
+}
+
+/* Admin menu icon */
+#adminmenu .menu-icon-mailbridge img {
+    width: 20px;
+    height: 20px;
+    opacity: 0.6;
+}
+
+#adminmenu .menu-icon-mailbridge:hover img,
+#adminmenu .menu-icon-mailbridge.current img {
+    opacity: 1;
+}
+
+/* Pagination */
+.tablenav.bottom {
+    padding: 10px 0;
+}
+
+.tablenav-pages {
+    float: right;
+}
+
+.tablenav-pages .displaying-num {
+    margin-right: 10px;
+    color: #646970;
+}
+
+/* Grid layout for settings */
+@media screen and (max-width: 900px) {
+    .wrap > div[style*="grid"] {
+        display: block !important;
+    }
+
+    .mailbridge-info-widget {
+        margin-top: 20px;
+    }
+}

@@ -43,8 +43,7 @@ class MailBridge_Admin {
             'manage_options',
             'mailbridge',
             array($this, 'render_templates_page'),
-            'dashicons-email-alt',
-            30
+            'dashicons-email-alt'
         );
 
         // Templates submenu
@@ -59,9 +58,9 @@ class MailBridge_Admin {
 
         // Add/Edit template
         add_submenu_page(
-            null, // Hidden from menu
+            'mailbridge-email-types', // Hidden from menu
             __('Edit Template', 'wp-mail-bridge'),
-            __('Edit Template', 'wp-mail-bridge'),
+            '',
             'manage_options',
             'mailbridge-edit-template',
             array($this, 'render_edit_template_page')

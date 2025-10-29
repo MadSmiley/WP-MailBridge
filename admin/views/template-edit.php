@@ -87,50 +87,16 @@ $languages = array(
                             <option value=""><?php echo esc_html__('-- Select a registered email type --', 'wp-mail-bridge'); ?></option>
                             <?php foreach ($email_types as $type_id => $type_data): ?>
                                 <option value="<?php echo esc_attr($type_id); ?>"
-                                        data-subject="<?php echo esc_attr($type_data['default_subject']); ?>"
-                                        data-content="<?php echo esc_attr($type_data['default_content']); ?>"
-                                        data-variables="<?php echo esc_attr(json_encode($type_data['variables'])); ?>">
+                                        data-subject="<?php echo esc_attr($type_data['default_subject'] ?? ''); ?>"
+                                        data-content="<?php echo esc_attr($type_data['default_content'] ?? ''); ?>"
+                                        data-variables="<?php echo esc_attr(json_encode($type_data['variables'] ?? [])); ?>"
+                                        data-plugin="<?php echo esc_attr($type_data['plugin'] ?? ''); ?>">
                                     <?php echo esc_html($type_data['name']); ?> (<?php echo esc_html($type_id); ?>)
                                 </option>
                             <?php endforeach; ?>
                         </select>
                         <p class="description">
                             <?php echo esc_html__('Optional: Select a registered email type to auto-fill and see available variables.', 'wp-mail-bridge'); ?>
-                        </p>
-                    </td>
-                </tr>
-
-                <tr>
-                    <th scope="row">
-                        <label for="subject"><?php echo esc_html__('Subject', 'wp-mail-bridge'); ?> *</label>
-                    </th>
-                    <td>
-                        <input type="text" name="subject" id="subject" class="large-text"
-                               value="<?php echo esc_attr($subject); ?>" required>
-                        <p class="description">
-                            <?php echo esc_html__('Email subject line. You can use variables like {{variable_name}}.', 'wp-mail-bridge'); ?>
-                        </p>
-                    </td>
-                </tr>
-
-                <tr>
-                    <th scope="row">
-                        <label for="content"><?php echo esc_html__('Content', 'wp-mail-bridge'); ?> *</label>
-                    </th>
-                    <td>
-                        <?php
-                        wp_editor($content, 'content', array(
-                            'textarea_name' => 'content',
-                            'textarea_rows' => 15,
-                            'teeny' => false,
-                            'media_buttons' => false,
-                            'tinymce' => array(
-                                'toolbar1' => 'formatselect,bold,italic,underline,bullist,numlist,link,unlink,forecolor,backcolor,removeformat',
-                            ),
-                        ));
-                        ?>
-                        <p class="description">
-                            <?php echo esc_html__('Email body content. HTML is supported. Use variables like {{variable_name}}.', 'wp-mail-bridge'); ?>
                         </p>
                     </td>
                 </tr>
@@ -181,6 +147,41 @@ $languages = array(
                         </select>
                         <p class="description">
                             <?php echo esc_html__('Only active templates can be used to send emails.', 'wp-mail-bridge'); ?>
+                        </p>
+                    </td>
+                </tr>
+
+                <tr>
+                    <th scope="row">
+                        <label for="subject"><?php echo esc_html__('Subject', 'wp-mail-bridge'); ?> *</label>
+                    </th>
+                    <td>
+                        <input type="text" name="subject" id="subject" class="large-text"
+                               value="<?php echo esc_attr($subject); ?>" required>
+                        <p class="description">
+                            <?php echo esc_html__('Email subject line. You can use variables like {{variable_name}}.', 'wp-mail-bridge'); ?>
+                        </p>
+                    </td>
+                </tr>
+
+                <tr>
+                    <th scope="row">
+                        <label for="content"><?php echo esc_html__('Content', 'wp-mail-bridge'); ?> *</label>
+                    </th>
+                    <td>
+                        <?php
+                        wp_editor($content, 'content', array(
+                            'textarea_name' => 'content',
+                            'textarea_rows' => 15,
+                            'teeny' => false,
+                            'media_buttons' => false,
+                            'tinymce' => array(
+                                'toolbar1' => 'formatselect,bold,italic,underline,bullist,numlist,link,unlink,forecolor,backcolor,removeformat',
+                            ),
+                        ));
+                        ?>
+                        <p class="description">
+                            <?php echo esc_html__('Email body content. HTML is supported. Use variables like {{variable_name}}.', 'wp-mail-bridge'); ?>
                         </p>
                     </td>
                 </tr>

@@ -17,17 +17,25 @@
 
             if (!selectedOption.val()) {
                 $('#mailbridge-variables-info').hide();
+                // Réactiver le champ plugin si on désélectionne
+                $('#plugin_name').prop('readonly', false).css('background-color', '');
                 return;
             }
 
             var defaultSubject = selectedOption.data('subject');
             var defaultContent = selectedOption.data('content');
             var variables = selectedOption.data('variables');
+            var pluginName = selectedOption.data('plugin');
 
             // Auto-fill template slug
             var typeId = selectedOption.val();
             if (!$('#template_slug').val()) {
                 $('#template_slug').val(typeId);
+            }
+
+            // Auto-fill and lock plugin name
+            if (pluginName) {
+                $('#plugin_name').val(pluginName).prop('readonly', true).css('background-color', '#f0f0f1');
             }
 
             // Auto-fill subject if empty

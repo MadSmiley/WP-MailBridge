@@ -19,6 +19,8 @@
                 $('#mailbridge-variables-info').hide();
                 // Réactiver le champ plugin si on désélectionne
                 $('#plugin_name').prop('readonly', false).css('background-color', '');
+                // Réactiver toutes les langues
+                $('#language option').prop('disabled', false).show();
                 return;
             }
 
@@ -26,6 +28,7 @@
             var defaultContent = selectedOption.data('content');
             var variables = selectedOption.data('variables');
             var pluginName = selectedOption.data('plugin');
+            var expectedLanguages = selectedOption.data('languages');
 
             // Auto-fill template slug
             var typeId = selectedOption.val();
@@ -36,6 +39,32 @@
             // Auto-fill and lock plugin name
             if (pluginName) {
                 $('#plugin_name').val(pluginName).prop('readonly', true).css('background-color', '#f0f0f1');
+            }
+
+            // Filter languages based on email type requirements
+            if (expectedLanguages && Array.isArray(expectedLanguages) && expectedLanguages.length > 0) {
+                var currentLanguage = $('#language').val();
+                var languageStillAvailable = false;
+
+                $('#language option').each(function() {
+                    var langCode = $(this).val();
+                    if (expectedLanguages.indexOf(langCode) !== -1) {
+                        $(this).prop('disabled', false).show();
+                        if (langCode === currentLanguage) {
+                            languageStillAvailable = true;
+                        }
+                    } else {
+                        $(this).prop('disabled', true).hide();
+                    }
+                });
+
+                // Si la langue actuelle n'est plus disponible, sélectionner la première langue disponible
+                if (!languageStillAvailable) {
+                    $('#language').val(expectedLanguages[0]);
+                }
+            } else {
+                // Aucune restriction de langue, tout afficher
+                $('#language option').prop('disabled', false).show();
             }
 
             // Auto-fill subject if empty

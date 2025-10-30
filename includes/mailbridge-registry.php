@@ -54,6 +54,7 @@ class MailBridge_Registry {
             'plugin' => '',
             'default_subject' => '',
             'default_content' => '',
+            'languages' => array(),
         );
 
         $args = wp_parse_args($args, $defaults);
@@ -97,6 +98,12 @@ class MailBridge_Registry {
                 $type_id
             ));
 
+            // Convert languages array to comma-separated string
+            $languages_str = '';
+            if (!empty($type_data['languages']) && is_array($type_data['languages'])) {
+                $languages_str = implode(',', $type_data['languages']);
+            }
+
             $data = array(
                 'type_id' => $type_id,
                 'name' => $type_data['name'],
@@ -105,6 +112,7 @@ class MailBridge_Registry {
                 'plugin_name' => $type_data['plugin'],
                 'default_subject' => $type_data['default_subject'],
                 'default_content' => $type_data['default_content'],
+                'languages' => $languages_str,
             );
 
             if ($exists) {
@@ -113,7 +121,7 @@ class MailBridge_Registry {
                     $table,
                     $data,
                     array('type_id' => $type_id),
-                    array('%s', '%s', '%s', '%s', '%s', '%s', '%s'),
+                    array('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s'),
                     array('%s')
                 );
             } else {
@@ -121,7 +129,7 @@ class MailBridge_Registry {
                 $wpdb->insert(
                     $table,
                     $data,
-                    array('%s', '%s', '%s', '%s', '%s', '%s', '%s')
+                    array('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s')
                 );
             }
         }
@@ -140,6 +148,12 @@ class MailBridge_Registry {
 
         $types = array();
         foreach ($results as $row) {
+            // Convert comma-separated languages string to array
+            $languages = array();
+            if (!empty($row->languages)) {
+                $languages = explode(',', $row->languages);
+            }
+
             $types[$row->type_id] = array(
                 'name' => $row->name,
                 'description' => $row->description,
@@ -147,6 +161,7 @@ class MailBridge_Registry {
                 'plugin' => $row->plugin_name,
                 'default_subject' => $row->default_subject,
                 'default_content' => $row->default_content,
+                'languages' => $languages,
             );
         }
 

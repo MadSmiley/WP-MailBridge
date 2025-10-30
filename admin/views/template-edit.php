@@ -90,7 +90,8 @@ $languages = array(
                                         data-subject="<?php echo esc_attr($type_data['default_subject'] ?? ''); ?>"
                                         data-content="<?php echo esc_attr($type_data['default_content'] ?? ''); ?>"
                                         data-variables="<?php echo esc_attr(json_encode($type_data['variables'] ?? [])); ?>"
-                                        data-plugin="<?php echo esc_attr($type_data['plugin'] ?? ''); ?>">
+                                        data-plugin="<?php echo esc_attr($type_data['plugin'] ?? ''); ?>"
+                                        data-languages="<?php echo esc_attr(json_encode($type_data['languages'] ?? [])); ?>">
                                     <?php echo esc_html($type_data['name']); ?> (<?php echo esc_html($type_id); ?>)
                                 </option>
                             <?php endforeach; ?>

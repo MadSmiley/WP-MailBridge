@@ -20,13 +20,26 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('MAILBRIDGE_VERSION', '1.0.0');
+define('MAILBRIDGE_VERSION', '1.0.1');
 define('MAILBRIDGE_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('MAILBRIDGE_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('MAILBRIDGE_PLUGIN_BASENAME', plugin_basename(__FILE__));
 
 // Autoloader
 require_once MAILBRIDGE_PLUGIN_DIR . 'includes/mailbridge-autoloader.php';
+
+/**
+ * Check for database updates
+ */
+function mailbridge_check_version() {
+    $installed_version = get_option('mailbridge_version', '0');
+
+    if (version_compare($installed_version, MAILBRIDGE_VERSION, '<')) {
+        require_once MAILBRIDGE_PLUGIN_DIR . 'includes/mailbridge-activator.php';
+        MailBridge_Activator::activate();
+    }
+}
+add_action('plugins_loaded', 'mailbridge_check_version', 5);
 
 /**
  * Main plugin class initialization
@@ -84,6 +97,7 @@ function mailbridge_send($template_name, $variables = array(), $to = '', $langua
  *                            - plugin: Plugin/module name
  *                            - default_subject: Default subject line
  *                            - default_content: Default email content
+ *                            - languages: Array of expected language codes (e.g., array('en', 'fr'))
  * @return bool               True on success, false on failure
  */
 function mailbridge_register_email_type($id, $args = array()) {

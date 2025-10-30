@@ -42,6 +42,9 @@ $email_types = MailBridge_Registry::get_email_types_from_db();
                         <?php echo esc_html__('Plugin/Module', 'wp-mail-bridge'); ?>
                     </th>
                     <th scope="col" class="manage-column">
+                        <?php echo esc_html__('Expected Languages', 'wp-mail-bridge'); ?>
+                    </th>
+                    <th scope="col" class="manage-column">
                         <?php echo esc_html__('Variables', 'wp-mail-bridge'); ?>
                     </th>
                 </tr>
@@ -60,6 +63,15 @@ $email_types = MailBridge_Registry::get_email_types_from_db();
                         </td>
                         <td data-colname="<?php echo esc_attr__('Plugin/Module', 'wp-mail-bridge'); ?>">
                             <?php echo esc_html($type_data['plugin']); ?>
+                        </td>
+                        <td data-colname="<?php echo esc_attr__('Expected Languages', 'wp-mail-bridge'); ?>">
+                            <?php
+                            if (!empty($type_data['languages']) && is_array($type_data['languages'])):
+                                echo '<code>' . esc_html(implode(', ', $type_data['languages'])) . '</code>';
+                            else:
+                                echo '<em>' . esc_html__('All languages', 'wp-mail-bridge') . '</em>';
+                            endif;
+                            ?>
                         </td>
                         <td data-colname="<?php echo esc_attr__('Variables', 'wp-mail-bridge'); ?>">
                             <?php if (!empty($type_data['variables'])): ?>
@@ -99,6 +111,7 @@ $email_types = MailBridge_Registry::get_email_types_from_db();
         'plugin' => 'My Plugin Name',
         'default_subject' => 'Email Subject with {{variable_name}}',
         'default_content' => '&lt;p&gt;Email content with {{another_var}}&lt;/p&gt;',
+        'languages' => array('en', 'fr'), // Optional: specify expected languages
     ));
 });</code></pre>
         </div>

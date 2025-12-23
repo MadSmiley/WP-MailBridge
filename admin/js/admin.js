@@ -219,6 +219,28 @@
         var contentEditor = null;
         var contentTextarea = document.getElementById('content');
 
+        // Fonction pour mettre à jour l'aperçu (globale)
+        function updatePreview() {
+            if (!contentEditor || !contentEditor.codemirror) {
+                return;
+            }
+
+            var content = contentEditor.codemirror.getValue();
+            var preview = $('#mailbridge-preview');
+
+            if (!content.trim()) {
+                preview.html('<em style="color: #999;">Preview will appear here...</em>');
+                return;
+            }
+
+            // Remplacer les variables par des placeholders visuels
+            var previewContent = content.replace(/\{\{([^}]+)\}\}/g, function(match, varName) {
+                return '<span style="background: #fff3cd; padding: 2px 6px; border-radius: 3px; border: 1px solid #ffc107; color: #856404; font-family: monospace; font-size: 0.9em;">{{' + varName.trim() + '}}</span>';
+            });
+
+            preview.html(previewContent);
+        }
+
         if (contentTextarea && typeof wp !== 'undefined' && typeof wp.codeEditor !== 'undefined') {
             var editorSettings = wp.codeEditor.defaultSettings ? _.clone(wp.codeEditor.defaultSettings) : {};
             editorSettings.codemirror = _.extend(
@@ -248,6 +270,16 @@
 
             contentEditor = wp.codeEditor.initialize(contentTextarea, editorSettings);
 
+            // Mettre à jour l'aperçu lors des changements (avec debounce)
+            var previewTimeout;
+            contentEditor.codemirror.on('change', function() {
+                clearTimeout(previewTimeout);
+                previewTimeout = setTimeout(updatePreview, 500);
+            });
+
+            // Aperçu initial
+            setTimeout(updatePreview, 500);
+
             // Mettre à jour le textarea avant la soumission du formulaire
             $('form').on('submit', function() {
                 if (contentEditor && contentEditor.codemirror) {
@@ -264,7 +296,35 @@
                     var currentContent = contentEditor.codemirror.getValue();
                     if (!currentContent.trim()) {
                         contentEditor.codemirror.setValue(defaultContent);
+                        updatePreview();
                     }
+                }
+            });
+
+            /**
+             * Gestion des onglets Code/Preview
+             */
+            $('.mailbridge-tab').on('click', function() {
+                var targetTab = $(this).data('tab');
+
+                // Mettre à jour les onglets actifs
+                $('.mailbridge-tab').removeClass('mailbridge-tab-active');
+                $(this).addClass('mailbridge-tab-active');
+
+                // Mettre à jour les panneaux actifs
+                $('.mailbridge-tab-panel').removeClass('mailbridge-tab-panel-active').hide();
+                $('.mailbridge-tab-panel[data-panel="' + targetTab + '"]').addClass('mailbridge-tab-panel-active').show();
+
+                // Si on bascule vers le code, rafraîchir CodeMirror
+                if (targetTab === 'code' && contentEditor && contentEditor.codemirror) {
+                    setTimeout(function() {
+                        contentEditor.codemirror.refresh();
+                    }, 100);
+                }
+
+                // Si on bascule vers le preview, mettre à jour
+                if (targetTab === 'preview') {
+                    updatePreview();
                 }
             });
         }

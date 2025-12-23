@@ -170,10 +170,40 @@ $languages = array(
                         <label for="content"><?php echo esc_html__('Content', 'wp-mail-bridge'); ?> *</label>
                     </th>
                     <td>
-                        <textarea name="content" id="content" class="large-text mailbridge-code-editor" rows="20" required><?php echo esc_textarea($content); ?></textarea>
-                        <p class="description">
-                            <?php echo esc_html__('Email body content. HTML is supported. Use variables like {{variable_name}}.', 'wp-mail-bridge'); ?>
-                        </p>
+                        <div class="mailbridge-tabs-wrapper">
+                            <!-- Onglets -->
+                            <div class="mailbridge-tabs">
+                                <button type="button" class="mailbridge-tab mailbridge-tab-active" data-tab="preview">
+                                    <span class="dashicons dashicons-visibility" style="margin-right: 5px;"></span>
+                                    <?php echo esc_html__('Preview', 'wp-mail-bridge'); ?>
+                                </button>
+                                <button type="button" class="mailbridge-tab" data-tab="code">
+                                    <span class="dashicons dashicons-editor-code" style="margin-right: 5px;"></span>
+                                    <?php echo esc_html__('Code', 'wp-mail-bridge'); ?>
+                                </button>
+                            </div>
+
+                            <!-- Contenu des onglets -->
+                            <div class="mailbridge-tab-content">
+                                <!-- Onglet Preview -->
+                                <div class="mailbridge-tab-panel mailbridge-tab-panel-active" data-panel="preview">
+                                    <div id="mailbridge-preview" style="border: 1px solid #ddd; padding: 20px; background: #fff; min-height: 500px; max-height: 600px; overflow-y: auto; border-radius: 4px;">
+                                        <em style="color: #999;"><?php echo esc_html__('Preview will appear here...', 'wp-mail-bridge'); ?></em>
+                                    </div>
+                                    <p class="description" style="margin-top: 10px;">
+                                        <?php echo esc_html__('Variables will be shown as placeholders in the preview.', 'wp-mail-bridge'); ?>
+                                    </p>
+                                </div>
+
+                                <!-- Onglet Code -->
+                                <div class="mailbridge-tab-panel" data-panel="code" style="display: none;">
+                                    <textarea name="content" id="content" class="large-text mailbridge-code-editor" rows="25" required><?php echo esc_textarea($content); ?></textarea>
+                                    <p class="description" style="margin-top: 10px;">
+                                        <?php echo esc_html__('Email body content. HTML is supported. Use variables like {{variable_name}}.', 'wp-mail-bridge'); ?>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
                     </td>
                 </tr>
             </tbody>

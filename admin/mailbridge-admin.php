@@ -179,7 +179,7 @@ class MailBridge_Admin {
         $template_name = sanitize_text_field($_POST['template_name']);
         $template_slug = sanitize_title($_POST['template_slug']);
         $subject = sanitize_text_field($_POST['subject']);
-        $content = wp_kses_post($_POST['content']);
+        $content = stripslashes(wp_kses_post($_POST['content']));
         $language = sanitize_text_field($_POST['language']);
         $plugin_name = sanitize_text_field($_POST['plugin_name']);
         $status = sanitize_text_field($_POST['status']);

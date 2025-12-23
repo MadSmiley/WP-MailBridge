@@ -170,17 +170,7 @@ $languages = array(
                         <label for="content"><?php echo esc_html__('Content', 'wp-mail-bridge'); ?> *</label>
                     </th>
                     <td>
-                        <?php
-                        wp_editor($content, 'content', array(
-                            'textarea_name' => 'content',
-                            'textarea_rows' => 15,
-                            'teeny' => false,
-                            'media_buttons' => false,
-                            'tinymce' => array(
-                                'toolbar1' => 'formatselect,bold,italic,underline,bullist,numlist,link,unlink,forecolor,backcolor,removeformat',
-                            ),
-                        ));
-                        ?>
+                        <textarea name="content" id="content" class="large-text mailbridge-code-editor" rows="20" required><?php echo esc_textarea($content); ?></textarea>
                         <p class="description">
                             <?php echo esc_html__('Email body content. HTML is supported. Use variables like {{variable_name}}.', 'wp-mail-bridge'); ?>
                         </p>

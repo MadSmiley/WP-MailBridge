@@ -72,23 +72,8 @@
                 $('#subject').val(defaultSubject);
             }
 
-            // Auto-fill content if empty
-            if (defaultContent) {
-                var currentContent = '';
-
-                // Check if we're using visual or text editor
-                if (typeof tinymce !== 'undefined' && tinymce.get('content')) {
-                    currentContent = tinymce.get('content').getContent();
-                    if (!currentContent.trim()) {
-                        tinymce.get('content').setContent(defaultContent);
-                    }
-                } else {
-                    currentContent = $('#content').val();
-                    if (!currentContent.trim()) {
-                        $('#content').val(defaultContent);
-                    }
-                }
-            }
+            // Auto-fill content if empty (géré par le listener CodeMirror plus bas)
+            // La logique a été déplacée dans la section d'initialisation de CodeMirror
 
             // Display available variables
             if (variables && typeof variables === 'object') {
@@ -168,11 +153,16 @@
         $(document).on('click', '#mailbridge-variables-list code', function() {
             var variable = $(this).text();
 
-            // Insert into TinyMCE if available
-            if (typeof tinymce !== 'undefined' && tinymce.get('content')) {
-                tinymce.get('content').execCommand('mceInsertContent', false, variable);
+            // Récupérer l'éditeur CodeMirror
+            var contentTextarea = document.getElementById('content');
+            if (contentTextarea && typeof wp !== 'undefined' && typeof wp.codeEditor !== 'undefined') {
+                var editor = wp.codeEditor.getInstance(contentTextarea);
+                if (editor && editor.codemirror) {
+                    editor.codemirror.replaceSelection(variable);
+                    editor.codemirror.focus();
+                }
             } else {
-                // Insert into textarea
+                // Fallback pour textarea simple
                 var textarea = $('#content');
                 var cursorPos = textarea.prop('selectionStart');
                 var textBefore = textarea.val().substring(0, cursorPos);
@@ -222,6 +212,62 @@
                 $(this).css('background', '');
             }.bind(this), 200);
         });
+
+        /**
+         * Initialiser CodeMirror pour l'éditeur de contenu
+         */
+        var contentEditor = null;
+        var contentTextarea = document.getElementById('content');
+
+        if (contentTextarea && typeof wp !== 'undefined' && typeof wp.codeEditor !== 'undefined') {
+            var editorSettings = wp.codeEditor.defaultSettings ? _.clone(wp.codeEditor.defaultSettings) : {};
+            editorSettings.codemirror = _.extend(
+                {},
+                editorSettings.codemirror,
+                {
+                    mode: 'text/html',
+                    lineNumbers: true,
+                    lineWrapping: true,
+                    indentUnit: 4,
+                    indentWithTabs: false,
+                    tabSize: 4,
+                    autoCloseTags: true,
+                    matchBrackets: true,
+                    styleActiveLine: true,
+                    extraKeys: {
+                        "Tab": function(cm) {
+                            var spaces = Array(cm.getOption("indentUnit") + 1).join(" ");
+                            cm.replaceSelection(spaces);
+                        },
+                        "Shift-Tab": function(cm) {
+                            cm.execCommand("indentLess");
+                        }
+                    }
+                }
+            );
+
+            contentEditor = wp.codeEditor.initialize(contentTextarea, editorSettings);
+
+            // Mettre à jour le textarea avant la soumission du formulaire
+            $('form').on('submit', function() {
+                if (contentEditor && contentEditor.codemirror) {
+                    contentEditor.codemirror.save();
+                }
+            });
+
+            // Synchroniser avec l'auto-fill depuis email type reference
+            $('#email_type_reference').on('change', function() {
+                var selectedOption = $(this).find('option:selected');
+                var defaultContent = selectedOption.data('content');
+
+                if (defaultContent && contentEditor && contentEditor.codemirror) {
+                    var currentContent = contentEditor.codemirror.getValue();
+                    if (!currentContent.trim()) {
+                        contentEditor.codemirror.setValue(defaultContent);
+                    }
+                }
+            });
+        }
 
     });
 

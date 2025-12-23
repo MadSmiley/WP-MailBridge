@@ -114,11 +114,16 @@ class MailBridge_Admin {
             MAILBRIDGE_VERSION
         );
 
+        // CodeMirror pour l'éditeur de code
+        wp_enqueue_code_editor(array('type' => 'text/html'));
+        wp_enqueue_script('wp-theme-plugin-editor');
+        wp_enqueue_style('wp-codemirror');
+
         // JavaScript
         wp_enqueue_script(
             'mailbridge-admin',
             MAILBRIDGE_PLUGIN_URL . 'admin/js/admin.js',
-            array('jquery'),
+            array('jquery', 'wp-codemirror'),
             MAILBRIDGE_VERSION,
             true
         );

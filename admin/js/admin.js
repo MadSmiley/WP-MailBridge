@@ -9,6 +9,9 @@
 
     $(document).ready(function() {
 
+        // Variable globale pour stocker les preview values
+        var previewValues = {};
+
         /**
          * Email type reference selector
          */
@@ -21,14 +24,24 @@
                 $('#plugin_name').prop('readonly', false).css('background-color', '');
                 // Réactiver toutes les langues
                 $('#language option').prop('disabled', false).show();
+                // Réinitialiser les preview values
+                previewValues = {};
                 return;
             }
 
             var defaultSubject = selectedOption.data('subject');
             var defaultContent = selectedOption.data('content');
             var variables = selectedOption.data('variables');
+            var previewValuesData = selectedOption.data('preview-values');
             var pluginName = selectedOption.data('plugin');
             var expectedLanguages = selectedOption.data('languages');
+
+            // Stocker les preview values pour l'aperçu
+            if (previewValuesData && typeof previewValuesData === 'object') {
+                previewValues = previewValuesData;
+            } else {
+                previewValues = {};
+            }
 
             // Auto-fill template slug
             var typeId = selectedOption.val();
@@ -89,6 +102,11 @@
                 $('#mailbridge-variables-info').hide();
             }
         });
+
+        // Trigger change event on page load if email type is already selected (edit mode)
+        if ($('#email_type_reference').val()) {
+            $('#email_type_reference').trigger('change');
+        }
 
         /**
          * Template slug auto-generation from name
@@ -233,9 +251,29 @@
                 return;
             }
 
-            // Remplacer les variables par des placeholders visuels
+            // Remplacer les variables par leurs valeurs d'exemple ou des placeholders
             var previewContent = content.replace(/\{\{([^}]+)\}\}/g, function(match, varName) {
-                return '<span style="background: #fff3cd; padding: 2px 6px; border-radius: 3px; border: 1px solid #ffc107; color: #856404; font-family: monospace; font-size: 0.9em;">{{' + varName.trim() + '}}</span>';
+                var cleanVarName = varName.trim();
+
+                // Si on a une valeur d'exemple, l'utiliser
+                if (previewValues && previewValues[cleanVarName]) {
+                    var previewValue = previewValues[cleanVarName];
+
+                    // Détecter si la valeur contient du HTML
+                    var containsHtml = /<[^>]+>/.test(previewValue);
+
+                    if (containsHtml) {
+                        // Si contient du HTML, afficher directement sans wrapper
+                        return previewValue;
+                    } else {
+                        // Sinon, utiliser un span avec style
+                        return '<span style="background: #d4edda; padding: 0px 4px; border-radius: 3px; border: 1px solid #28a745; color: #155724;">' +
+                               previewValue + '</span>';
+                    }
+                }
+
+                // Sinon, afficher le placeholder de variable
+                return '<span style="background: #fff3cd; padding: 2px 6px; border-radius: 3px; border: 1px solid #ffc107; color: #856404; font-family: monospace; font-size: 0.9em;">{{' + cleanVarName + '}}</span>';
             });
 
             preview.html(previewContent);

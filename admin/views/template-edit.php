@@ -87,9 +87,11 @@ $languages = array(
                             <option value=""><?php echo esc_html__('-- Select a registered email type --', 'wp-mail-bridge'); ?></option>
                             <?php foreach ($email_types as $type_id => $type_data): ?>
                                 <option value="<?php echo esc_attr($type_id); ?>"
+                                        <?php selected($template_slug, $type_id); ?>
                                         data-subject="<?php echo esc_attr($type_data['default_subject'] ?? ''); ?>"
                                         data-content="<?php echo esc_attr($type_data['default_content'] ?? ''); ?>"
                                         data-variables="<?php echo esc_attr(json_encode($type_data['variables'] ?? [])); ?>"
+                                        data-preview-values="<?php echo esc_attr(json_encode($type_data['preview_values'] ?? [])); ?>"
                                         data-plugin="<?php echo esc_attr($type_data['plugin'] ?? ''); ?>"
                                         data-languages="<?php echo esc_attr(json_encode($type_data['languages'] ?? [])); ?>">
                                     <?php echo esc_html($type_data['name']); ?> (<?php echo esc_html($type_id); ?>)

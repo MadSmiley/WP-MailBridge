@@ -54,6 +54,7 @@ class MailBridge_Activator {
             plugin_name varchar(100) DEFAULT NULL,
             default_subject varchar(255) DEFAULT NULL,
             default_content longtext,
+            preview_values longtext DEFAULT NULL,
             languages varchar(255) DEFAULT NULL,
             created_at datetime DEFAULT CURRENT_TIMESTAMP,
             updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,

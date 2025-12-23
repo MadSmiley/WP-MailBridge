@@ -54,6 +54,7 @@ class MailBridge_Registry {
             'plugin' => '',
             'default_subject' => '',
             'default_content' => '',
+            'preview_values' => array(),
             'languages' => array(),
         );
 
@@ -112,6 +113,7 @@ class MailBridge_Registry {
                 'plugin_name' => $type_data['plugin'],
                 'default_subject' => $type_data['default_subject'],
                 'default_content' => $type_data['default_content'],
+                'preview_values' => maybe_serialize($type_data['preview_values']),
                 'languages' => $languages_str,
             );
 
@@ -121,7 +123,7 @@ class MailBridge_Registry {
                     $table,
                     $data,
                     array('type_id' => $type_id),
-                    array('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s'),
+                    array('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s'),
                     array('%s')
                 );
             } else {
@@ -129,7 +131,7 @@ class MailBridge_Registry {
                 $wpdb->insert(
                     $table,
                     $data,
-                    array('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s')
+                    array('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s')
                 );
             }
         }
@@ -161,6 +163,7 @@ class MailBridge_Registry {
                 'plugin' => $row->plugin_name,
                 'default_subject' => $row->default_subject,
                 'default_content' => $row->default_content,
+                'preview_values' => isset($row->preview_values) ? maybe_unserialize($row->preview_values) : array(),
                 'languages' => $languages,
             );
         }

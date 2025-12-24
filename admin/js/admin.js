@@ -22,7 +22,8 @@
 
             if (!selectedOption.val()) {
                 $('#mailbridge-variables-info').hide();
-                // Réactiver le champ plugin si on désélectionne
+                // Réactiver les champs slug et plugin si on désélectionne
+                $('#template_slug').prop('readonly', false).css('background-color', '');
                 $('#plugin_name').prop('readonly', false).css('background-color', '');
                 // Réactiver toutes les langues
                 $('#language option').prop('disabled', false).show();
@@ -55,11 +56,9 @@
                 $('#mailbridge-reset-content').hide();
             }
 
-            // Auto-fill template slug
+            // Auto-fill et verrouiller le template slug avec le type ID
             var typeId = selectedOption.val();
-            if (!$('#template_slug').val()) {
-                $('#template_slug').val(typeId);
-            }
+            $('#template_slug').val(typeId).prop('readonly', true).css('background-color', '#f0f0f1');
 
             // Auto-fill and lock plugin name
             if (pluginName) {

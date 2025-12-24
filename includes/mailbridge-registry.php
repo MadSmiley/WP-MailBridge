@@ -111,8 +111,8 @@ class MailBridge_Registry {
                 'description' => $type_data['description'],
                 'variables' => maybe_serialize($type_data['variables']),
                 'plugin_name' => $type_data['plugin'],
-                'default_subject' => $type_data['default_subject'],
-                'default_content' => $type_data['default_content'],
+                'default_subject' => maybe_serialize($type_data['default_subject']),
+                'default_content' => maybe_serialize($type_data['default_content']),
                 'preview_values' => maybe_serialize($type_data['preview_values']),
                 'languages' => $languages_str,
             );
@@ -161,8 +161,8 @@ class MailBridge_Registry {
                 'description' => $row->description,
                 'variables' => maybe_unserialize($row->variables),
                 'plugin' => $row->plugin_name,
-                'default_subject' => $row->default_subject,
-                'default_content' => $row->default_content,
+                'default_subject' => maybe_unserialize($row->default_subject),
+                'default_content' => maybe_unserialize($row->default_content),
                 'preview_values' => isset($row->preview_values) ? maybe_unserialize($row->preview_values) : array(),
                 'languages' => $languages,
             );

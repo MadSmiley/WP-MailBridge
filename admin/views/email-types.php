@@ -99,6 +99,8 @@ $email_types = MailBridge_Registry::get_email_types_from_db();
 
         <div class="mailbridge-info-box" style="margin-top: 30px; padding: 20px; background: #fff; border: 1px solid #c3c4c7;">
             <h2><?php echo esc_html__('For Developers', 'wp-mail-bridge'); ?></h2>
+
+            <h3><?php echo esc_html__('Basic Usage', 'wp-mail-bridge'); ?></h3>
             <p><?php echo esc_html__('To register a new email type in your plugin or theme, use the following code:', 'wp-mail-bridge'); ?></p>
             <pre style="background: #f0f0f1; padding: 15px; overflow-x: auto;"><code>add_action('mailbridge_register_email_types', function() {
     mailbridge_register_email_type('my_email_type', array(
@@ -114,6 +116,53 @@ $email_types = MailBridge_Registry::get_email_types_from_db();
         'languages' => array('en', 'fr'), // Optional: specify expected languages
     ));
 });</code></pre>
+
+            <h3 style="margin-top: 20px;"><?php echo esc_html__('Multi-Language Support', 'wp-mail-bridge'); ?></h3>
+            <p><?php echo esc_html__('You can provide different default content and preview values for each language:', 'wp-mail-bridge'); ?></p>
+            <pre style="background: #f0f0f1; padding: 15px; overflow-x: auto;"><code>add_action('mailbridge_register_email_types', function() {
+    mailbridge_register_email_type('user_welcome', array(
+        'name' => 'User Welcome Email',
+        'description' => 'Welcome email sent to new users',
+        'variables' => array(
+            'user_name' => 'User full name',
+            'site_name' => 'Website name',
+            'login_url' => 'Login page URL',
+        ),
+        'plugin' => 'My Plugin',
+
+        // Multi-language subject
+        'default_subject' => array(
+            'en' => 'Welcome to {{site_name}}!',
+            'fr' => 'Bienvenue sur {{site_name}} !',
+        ),
+
+        // Multi-language content
+        'default_content' => array(
+            'en' => '&lt;p&gt;Hello {{user_name}},&lt;/p&gt;&lt;p&gt;Welcome to our site!&lt;/p&gt;',
+            'fr' => '&lt;p&gt;Bonjour {{user_name}},&lt;/p&gt;&lt;p&gt;Bienvenue sur notre site !&lt;/p&gt;',
+        ),
+
+        // Multi-language preview values
+        'preview_values' => array(
+            'user_name' => array(
+                'en' => 'John Doe',
+                'fr' => 'Jean Dupont',
+            ),
+            'site_name' => 'My Website', // Same for all languages
+            'login_url' => array(
+                'en' => '&lt;a href="https://example.com/login"&gt;Login here&lt;/a&gt;',
+                'fr' => '&lt;a href="https://example.com/login"&gt;Se connecter&lt;/a&gt;',
+            ),
+        ),
+
+        'languages' => array('en', 'fr'),
+    ));
+});</code></pre>
+
+            <p style="margin-top: 15px;">
+                <strong><?php echo esc_html__('Note:', 'wp-mail-bridge'); ?></strong>
+                <?php echo esc_html__('When a language is selected, the editor automatically loads the corresponding default_subject, default_content, and preview_values. You can mix simple strings (same for all languages) and language-specific arrays.', 'wp-mail-bridge'); ?>
+            </p>
         </div>
     <?php endif; ?>
 </div>

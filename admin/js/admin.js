@@ -15,6 +15,22 @@
         var currentDefaultSubject = '';
 
         /**
+         * Résoudre une valeur qui peut être simple ou par langue
+         */
+        function resolveLanguageValue(value, language) {
+            if (!value) return '';
+
+            // Si c'est un objet (par langue)
+            if (typeof value === 'object' && !Array.isArray(value)) {
+                language = language || $('#language').val() || 'en';
+                return value[language] || value['en'] || Object.values(value)[0] || '';
+            }
+
+            // Sinon, retourner la valeur telle quelle
+            return value;
+        }
+
+        /**
          * Email type reference selector
          */
         $('#email_type_reference').on('change', function() {
@@ -39,7 +55,7 @@
             var pluginName = selectedOption.data('plugin');
             var expectedLanguages = selectedOption.data('languages');
 
-            // Stocker les valeurs par défaut et preview values
+            // Stocker les valeurs par défaut brutes (peuvent être par langue)
             currentDefaultContent = defaultContent || '';
             currentDefaultSubject = defaultSubject || '';
 
@@ -48,6 +64,11 @@
             } else {
                 previewValues = {};
             }
+
+            // Résoudre les valeurs par langue
+            var currentLanguage = $('#language').val() || 'en';
+            var resolvedSubject = resolveLanguageValue(defaultSubject, currentLanguage);
+            var resolvedContent = resolveLanguageValue(defaultContent, currentLanguage);
 
             // Afficher le bouton reset si on a du contenu par défaut
             if (currentDefaultContent) {
@@ -91,9 +112,9 @@
                 $('#language option').prop('disabled', false).show();
             }
 
-            // Auto-fill subject if empty
-            if (!$('#subject').val() && defaultSubject) {
-                $('#subject').val(defaultSubject);
+            // Auto-fill subject if empty (avec résolution par langue)
+            if (!$('#subject').val() && resolvedSubject) {
+                $('#subject').val(resolvedSubject);
             }
 
             // Auto-fill content if empty (géré par le listener CodeMirror plus bas)
@@ -118,6 +139,46 @@
         if ($('#email_type_reference').val()) {
             $('#email_type_reference').trigger('change');
         }
+
+        /**
+         * Mettre à jour le preview et proposer de charger les defaults quand la langue change
+         */
+        $('#language').on('change', function() {
+            var newLanguage = $(this).val();
+
+            // Si on a un email type sélectionné avec des defaults par langue
+            if ($('#email_type_reference').val() && (currentDefaultSubject || currentDefaultContent)) {
+                var resolvedSubject = resolveLanguageValue(currentDefaultSubject, newLanguage);
+                var resolvedContent = resolveLanguageValue(currentDefaultContent, newLanguage);
+
+                // Proposer de charger le subject par défaut pour cette langue
+                if (resolvedSubject && currentDefaultSubject) {
+                    var currentSubject = $('#subject').val();
+
+                    // Si le subject est vide ou correspond à la valeur par défaut d'une autre langue
+                    if (!currentSubject || (typeof currentDefaultSubject === 'object' && Object.values(currentDefaultSubject).indexOf(currentSubject) !== -1)) {
+                        $('#subject').val(resolvedSubject);
+                    }
+                }
+
+                // Proposer de charger le content par défaut pour cette langue
+                if (resolvedContent && currentDefaultContent && contentEditor && contentEditor.codemirror) {
+                    var currentContent = contentEditor.codemirror.getValue().trim();
+
+                    // Si le content est vide ou correspond à la valeur par défaut d'une autre langue
+                    if (!currentContent || (typeof currentDefaultContent === 'object' && Object.values(currentDefaultContent).some(function(val) {
+                        return val.trim() === currentContent;
+                    }))) {
+                        contentEditor.codemirror.setValue(resolvedContent);
+                    }
+                }
+            }
+
+            // Mettre à jour le preview
+            if (typeof updatePreview === 'function') {
+                updatePreview();
+            }
+        });
 
         /**
          * Template slug auto-generation from name
@@ -266,9 +327,11 @@
             var previewContent = content.replace(/\{\{([^}]+)\}\}/g, function(match, varName) {
                 var cleanVarName = varName.trim();
 
-                // Si on a une valeur d'exemple, l'afficher directement sans mise en forme
+                // Si on a une valeur d'exemple
                 if (previewValues && previewValues[cleanVarName]) {
-                    return previewValues[cleanVarName];
+                    var currentLanguage = $('#language').val() || 'en';
+                    var previewValue = resolveLanguageValue(previewValues[cleanVarName], currentLanguage);
+                    return previewValue;
                 }
 
                 // Sinon, afficher le placeholder de variable
@@ -340,7 +403,9 @@
                 if (currentDefaultContent && contentEditor && contentEditor.codemirror) {
                     var currentContent = contentEditor.codemirror.getValue();
                     if (!currentContent.trim()) {
-                        contentEditor.codemirror.setValue(currentDefaultContent);
+                        var currentLanguage = $('#language').val() || 'en';
+                        var resolvedContent = resolveLanguageValue(currentDefaultContent, currentLanguage);
+                        contentEditor.codemirror.setValue(resolvedContent);
                         updatePreview();
                     }
                 }
@@ -352,7 +417,9 @@
             $('#mailbridge-reset-content').on('click', function() {
                 if (currentDefaultContent && contentEditor && contentEditor.codemirror) {
                     if (confirm('Are you sure you want to reset the content to the default template? Any unsaved changes will be lost.')) {
-                        contentEditor.codemirror.setValue(currentDefaultContent);
+                        var currentLanguage = $('#language').val() || 'en';
+                        var resolvedContent = resolveLanguageValue(currentDefaultContent, currentLanguage);
+                        contentEditor.codemirror.setValue(resolvedContent);
                         updatePreview();
                     }
                 }

@@ -96,8 +96,14 @@ function mailbridge_send($template_name, $variables = array(), $to = '', $langua
  *                            - variables: Array of available variables
  *                            - plugin: Plugin/module name
  *                            - default_subject: Default subject line
+ *                                             Can be simple: 'Welcome!'
+ *                                             Or by language: array('en' => 'Welcome!', 'fr' => 'Bienvenue!')
  *                            - default_content: Default email content
- *                            - preview_values: Array of example values for variables (e.g., array('user_name' => 'John Doe'))
+ *                                             Can be simple: '<p>Hello...</p>'
+ *                                             Or by language: array('en' => '<p>Hello...</p>', 'fr' => '<p>Bonjour...</p>')
+ *                            - preview_values: Array of example values for variables
+ *                                            Can be simple: array('user_name' => 'John Doe')
+ *                                            Or by language: array('user_name' => array('en' => 'John Doe', 'fr' => 'Jean Dupont'))
  *                            - languages: Array of expected language codes (e.g., array('en', 'fr'))
  * @return bool               True on success, false on failure
  */

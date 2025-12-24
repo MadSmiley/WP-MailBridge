@@ -199,6 +199,12 @@ $languages = array(
 
                                 <!-- Onglet Code -->
                                 <div class="mailbridge-tab-panel" data-panel="code" style="display: none;">
+                                    <div style="margin-bottom: 10px;">
+                                        <button type="button" id="mailbridge-reset-content" class="button" style="display: none;">
+                                            <span class="dashicons dashicons-image-rotate" style="margin-top: 3px;"></span>
+                                            <?php echo esc_html__('Reset to Default Content', 'wp-mail-bridge'); ?>
+                                        </button>
+                                    </div>
                                     <textarea name="content" id="content" class="large-text mailbridge-code-editor" rows="25" required><?php echo esc_textarea($content); ?></textarea>
                                     <p class="description" style="margin-top: 10px;">
                                         <?php echo esc_html__('Email body content. HTML is supported. Use variables like {{variable_name}}.', 'wp-mail-bridge'); ?>

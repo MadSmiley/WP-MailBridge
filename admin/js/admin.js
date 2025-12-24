@@ -9,8 +9,10 @@
 
     $(document).ready(function() {
 
-        // Variable globale pour stocker les preview values
+        // Variables globales
         var previewValues = {};
+        var currentDefaultContent = '';
+        var currentDefaultSubject = '';
 
         /**
          * Email type reference selector
@@ -36,11 +38,21 @@
             var pluginName = selectedOption.data('plugin');
             var expectedLanguages = selectedOption.data('languages');
 
-            // Stocker les preview values pour l'aperçu
+            // Stocker les valeurs par défaut et preview values
+            currentDefaultContent = defaultContent || '';
+            currentDefaultSubject = defaultSubject || '';
+
             if (previewValuesData && typeof previewValuesData === 'object') {
                 previewValues = previewValuesData;
             } else {
                 previewValues = {};
+            }
+
+            // Afficher le bouton reset si on a du contenu par défaut
+            if (currentDefaultContent) {
+                $('#mailbridge-reset-content').show();
+            } else {
+                $('#mailbridge-reset-content').hide();
             }
 
             // Auto-fill template slug
@@ -255,21 +267,9 @@
             var previewContent = content.replace(/\{\{([^}]+)\}\}/g, function(match, varName) {
                 var cleanVarName = varName.trim();
 
-                // Si on a une valeur d'exemple, l'utiliser
+                // Si on a une valeur d'exemple, l'afficher directement sans mise en forme
                 if (previewValues && previewValues[cleanVarName]) {
-                    var previewValue = previewValues[cleanVarName];
-
-                    // Détecter si la valeur contient du HTML
-                    var containsHtml = /<[^>]+>/.test(previewValue);
-
-                    if (containsHtml) {
-                        // Si contient du HTML, afficher directement sans wrapper
-                        return previewValue;
-                    } else {
-                        // Sinon, utiliser un span avec style
-                        return '<span style="background: #d4edda; padding: 0px 4px; border-radius: 3px; border: 1px solid #28a745; color: #155724;">' +
-                               previewValue + '</span>';
-                    }
+                    return previewValues[cleanVarName];
                 }
 
                 // Sinon, afficher le placeholder de variable
@@ -327,13 +327,22 @@
 
             // Synchroniser avec l'auto-fill depuis email type reference
             $('#email_type_reference').on('change', function() {
-                var selectedOption = $(this).find('option:selected');
-                var defaultContent = selectedOption.data('content');
-
-                if (defaultContent && contentEditor && contentEditor.codemirror) {
+                if (currentDefaultContent && contentEditor && contentEditor.codemirror) {
                     var currentContent = contentEditor.codemirror.getValue();
                     if (!currentContent.trim()) {
-                        contentEditor.codemirror.setValue(defaultContent);
+                        contentEditor.codemirror.setValue(currentDefaultContent);
+                        updatePreview();
+                    }
+                }
+            });
+
+            /**
+             * Bouton reset content
+             */
+            $('#mailbridge-reset-content').on('click', function() {
+                if (currentDefaultContent && contentEditor && contentEditor.codemirror) {
+                    if (confirm('Are you sure you want to reset the content to the default template? Any unsaved changes will be lost.')) {
+                        contentEditor.codemirror.setValue(currentDefaultContent);
                         updatePreview();
                     }
                 }

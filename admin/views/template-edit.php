@@ -209,7 +209,7 @@ $languages = array(
                                             <?php echo esc_html__('Beautify HTML', 'wp-mail-bridge'); ?>
                                         </button>
                                     </div>
-                                    <textarea name="content" id="content" class="large-text mailbridge-code-editor" rows="25" required><?php echo esc_textarea($content); ?></textarea>
+                                    <textarea name="content" id="content" class="large-text mailbridge-code-editor" rows="25"><?php echo esc_textarea($content); ?></textarea>
                                     <p class="description" style="margin-top: 10px;">
                                         <?php echo esc_html__('Email body content. HTML is supported. Use variables like {{variable_name}}.', 'wp-mail-bridge'); ?>
                                     </p>

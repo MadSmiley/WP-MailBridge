@@ -198,6 +198,11 @@ class MailBridge_Admin {
         $plugin_name = sanitize_text_field($_POST['plugin_name']);
         $status = sanitize_text_field($_POST['status']);
 
+        // Validation côté serveur
+        if (empty($template_name) || empty($template_slug) || empty($content)) {
+            wp_die(__('Template name, slug and content are required.', 'wp-mail-bridge'));
+        }
+
         $data = array(
             'template_name' => $template_name,
             'template_slug' => $template_slug,

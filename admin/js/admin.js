@@ -319,9 +319,20 @@
             setTimeout(updatePreview, 500);
 
             // Mettre à jour le textarea avant la soumission du formulaire
-            $('form').on('submit', function() {
+            $('form').on('submit', function(e) {
                 if (contentEditor && contentEditor.codemirror) {
                     contentEditor.codemirror.save();
+
+                    // Valider que le contenu n'est pas vide
+                    var content = contentEditor.codemirror.getValue().trim();
+                    if (!content) {
+                        e.preventDefault();
+                        alert('Please enter email content.');
+
+                        // Basculer vers l'onglet Code pour que l'utilisateur voie le problème
+                        $('.mailbridge-tab[data-tab="code"]').trigger('click');
+                        return false;
+                    }
                 }
             });
 

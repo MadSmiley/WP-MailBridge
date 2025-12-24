@@ -349,6 +349,31 @@
             });
 
             /**
+             * Bouton beautify HTML
+             */
+            $('#mailbridge-beautify-content').on('click', function() {
+                if (contentEditor && contentEditor.codemirror && typeof html_beautify !== 'undefined') {
+                    var html = contentEditor.codemirror.getValue();
+
+                    // Options de beautification
+                    var options = {
+                        indent_size: 4,
+                        indent_char: ' ',
+                        max_preserve_newlines: 1,
+                        preserve_newlines: true,
+                        indent_inner_html: true,
+                        wrap_line_length: 0,
+                        unformatted: ['code', 'pre'],
+                        content_unformatted: ['pre', 'textarea']
+                    };
+
+                    var beautified = html_beautify(html, options);
+                    contentEditor.codemirror.setValue(beautified);
+                    updatePreview();
+                }
+            });
+
+            /**
              * Gestion des onglets Code/Preview
              */
             $('.mailbridge-tab').on('click', function() {

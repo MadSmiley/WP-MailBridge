@@ -204,6 +204,10 @@ $languages = array(
                                             <span class="dashicons dashicons-image-rotate" style="margin-top: 3px;"></span>
                                             <?php echo esc_html__('Reset to Default Content', 'wp-mail-bridge'); ?>
                                         </button>
+                                        <button type="button" id="mailbridge-beautify-content" class="button">
+                                            <span class="dashicons dashicons-admin-appearance" style="margin-top: 3px;"></span>
+                                            <?php echo esc_html__('Beautify HTML', 'wp-mail-bridge'); ?>
+                                        </button>
                                     </div>
                                     <textarea name="content" id="content" class="large-text mailbridge-code-editor" rows="25" required><?php echo esc_textarea($content); ?></textarea>
                                     <p class="description" style="margin-top: 10px;">

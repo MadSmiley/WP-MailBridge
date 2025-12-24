@@ -119,11 +119,20 @@ class MailBridge_Admin {
         wp_enqueue_script('wp-theme-plugin-editor');
         wp_enqueue_style('wp-codemirror');
 
+        // JS Beautifier pour formatter le HTML
+        wp_enqueue_script(
+            'js-beautify',
+            'https://cdnjs.cloudflare.com/ajax/libs/js-beautify/1.14.11/beautify-html.min.js',
+            [],
+            '1.14.11',
+            true
+        );
+
         // JavaScript
         wp_enqueue_script(
             'mailbridge-admin',
             MAILBRIDGE_PLUGIN_URL . 'admin/js/admin.js',
-            array('jquery', 'wp-codemirror'),
+            ['jquery', 'wp-codemirror', 'js-beautify'],
             MAILBRIDGE_VERSION,
             true
         );

@@ -165,25 +165,41 @@ class MailBridge_Admin {
 
         // Verify nonce
         if (!isset($_POST['mailbridge_nonce']) || !wp_verify_nonce($_POST['mailbridge_nonce'], 'mailbridge_save_template')) {
-            wp_die(__('Security check failed', 'wp-mail-bridge'));
+            $error = new WP_Error(
+                'nonce_verification_failed',
+                __('Security check failed', 'wp-mail-bridge')
+            );
+            wp_die($error->get_error_message());
         }
 
         // Check permissions
         if (!current_user_can('manage_options')) {
-            wp_die(__('You do not have permission to perform this action', 'wp-mail-bridge'));
+            $error = new WP_Error(
+                'permission_denied',
+                __('You do not have permission to perform this action', 'wp-mail-bridge')
+            );
+            wp_die($error->get_error_message());
         }
 
         $action = sanitize_text_field($_POST['mailbridge_action']);
 
         if ($action === 'save_template') {
-            $this->save_template();
+            $result = $this->save_template();
+            if (is_wp_error($result)) {
+                wp_die($result->get_error_message());
+            }
         } elseif ($action === 'delete_template') {
-            $this->delete_template();
+            $result = $this->delete_template();
+            if (is_wp_error($result)) {
+                wp_die($result->get_error_message());
+            }
         }
     }
 
     /**
      * Save template
+     *
+     * @return bool|WP_Error True on success, WP_Error on failure
      */
     private function save_template() {
         global $wpdb;
@@ -200,10 +216,14 @@ class MailBridge_Admin {
 
         // Validation côté serveur
         if (empty($template_name) || empty($template_slug) || empty($content)) {
-            wp_die(__('Template name, slug and content are required.', 'wp-mail-bridge'));
+            return new WP_Error(
+                'missing_required_fields',
+                __('Template name, slug and content are required.', 'wp-mail-bridge'),
+                ['template_name' => $template_name, 'template_slug' => $template_slug]
+            );
         }
 
-        $data = array(
+        $data = [
             'template_name' => $template_name,
             'template_slug' => $template_slug,
             'subject' => $subject,
@@ -211,25 +231,41 @@ class MailBridge_Admin {
             'language' => $language,
             'plugin_name' => $plugin_name,
             'status' => $status,
-        );
+        ];
 
         if ($template_id > 0) {
             // Update existing
-            $wpdb->update(
+            $result = $wpdb->update(
                 $table,
                 $data,
-                array('id' => $template_id),
-                array('%s', '%s', '%s', '%s', '%s', '%s', '%s'),
-                array('%d')
+                ['id' => $template_id],
+                ['%s', '%s', '%s', '%s', '%s', '%s', '%s'],
+                ['%d']
             );
+
+            if ($result === false) {
+                return new WP_Error(
+                    'template_update_failed',
+                    sprintf(__('Failed to update template: %s', 'wp-mail-bridge'), $wpdb->last_error),
+                    ['template_id' => $template_id]
+                );
+            }
             $message = 'updated';
         } else {
             // Insert new
-            $wpdb->insert(
+            $result = $wpdb->insert(
                 $table,
                 $data,
-                array('%s', '%s', '%s', '%s', '%s', '%s', '%s')
+                ['%s', '%s', '%s', '%s', '%s', '%s', '%s']
             );
+
+            if ($result === false) {
+                return new WP_Error(
+                    'template_insert_failed',
+                    sprintf(__('Failed to create template: %s', 'wp-mail-bridge'), $wpdb->last_error),
+                    ['template_slug' => $template_slug]
+                );
+            }
             $message = 'created';
         }
 
@@ -239,6 +275,8 @@ class MailBridge_Admin {
 
     /**
      * Delete template
+     *
+     * @return bool|WP_Error True on success, WP_Error on failure
      */
     private function delete_template() {
         global $wpdb;
@@ -246,8 +284,22 @@ class MailBridge_Admin {
 
         $template_id = isset($_POST['template_id']) ? intval($_POST['template_id']) : 0;
 
-        if ($template_id > 0) {
-            $wpdb->delete($table, array('id' => $template_id), array('%d'));
+        if ($template_id <= 0) {
+            return new WP_Error(
+                'invalid_template_id',
+                __('Invalid template ID', 'wp-mail-bridge'),
+                ['template_id' => $template_id]
+            );
+        }
+
+        $result = $wpdb->delete($table, ['id' => $template_id], ['%d']);
+
+        if ($result === false) {
+            return new WP_Error(
+                'template_delete_failed',
+                sprintf(__('Failed to delete template: %s', 'wp-mail-bridge'), $wpdb->last_error),
+                ['template_id' => $template_id]
+            );
         }
 
         wp_redirect(admin_url('admin.php?page=mailbridge&message=deleted'));

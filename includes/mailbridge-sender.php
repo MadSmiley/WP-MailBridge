@@ -22,15 +22,26 @@ class MailBridge_Sender {
      * @param array  $variables     Variables to replace
      * @param string $to           Recipient email
      * @param string $language     Language code
-     * @return bool
+     * @return bool|WP_Error True on success, WP_Error on failure
      */
     public function send($template_slug, $variables = array(), $to = '', $language = '') {
         // Get template from database
         $template = $this->get_template($template_slug, $language);
 
+        // Check for database errors
+        if (is_wp_error($template)) {
+            $this->log_error($template_slug, $to, $template->get_error_message());
+            return $template;
+        }
+
         if (!$template) {
-            $this->log_error($template_slug, $to, 'Template not found');
-            return false;
+            $error = new WP_Error(
+                'template_not_found',
+                __('Template not found', 'wp-mail-bridge'),
+                ['template_slug' => $template_slug, 'language' => $language]
+            );
+            $this->log_error($template_slug, $to, $error->get_error_message());
+            return $error;
         }
 
         // Validate required variables
@@ -38,8 +49,17 @@ class MailBridge_Sender {
         if ($email_type) {
             $validation = $this->validate_variables($variables, $email_type['variables']);
             if (!$validation['valid']) {
-                $this->log_error($template_slug, $to, 'Missing variables: ' . implode(', ', $validation['missing']));
-                return false;
+                $error_message = sprintf(
+                    __('Missing required variables: %s', 'wp-mail-bridge'),
+                    implode(', ', $validation['missing'])
+                );
+                $error = new WP_Error(
+                    'missing_variables',
+                    $error_message,
+                    array('missing_variables' => $validation['missing'], 'template_slug' => $template_slug)
+                );
+                $this->log_error($template_slug, $to, $error->get_error_message());
+                return $error;
             }
         }
 
@@ -53,8 +73,13 @@ class MailBridge_Sender {
         }
 
         if (empty($to)) {
-            $this->log_error($template_slug, '', 'No recipient email provided');
-            return false;
+            $error = new WP_Error(
+                'no_recipient',
+                __('No recipient email provided', 'wp-mail-bridge'),
+                array('template_slug' => $template_slug)
+            );
+            $this->log_error($template_slug, '', $error->get_error_message());
+            return $error;
         }
 
         // Replace variables in subject and content
@@ -73,11 +98,16 @@ class MailBridge_Sender {
         // Log the result
         if ($sent) {
             $this->log_success($template_slug, $to, $subject);
+            return true;
         } else {
-            $this->log_error($template_slug, $to, 'Email sending failed');
+            $error = new WP_Error(
+                'email_send_failed',
+                __('Email sending failed', 'wp-mail-bridge'),
+                array('template_slug' => $template_slug, 'recipient' => $to, 'subject' => $subject)
+            );
+            $this->log_error($template_slug, $to, $error->get_error_message());
+            return $error;
         }
-
-        return $sent;
     }
 
     /**
@@ -85,7 +115,7 @@ class MailBridge_Sender {
      *
      * @param string $slug     Template slug
      * @param string $language Language code
-     * @return object|null
+     * @return object|WP_Error Template object on success, WP_Error on database failure
      */
     private function get_template($slug, $language = '') {
         global $wpdb;
@@ -103,12 +133,29 @@ class MailBridge_Sender {
             $language
         ));
 
+        // Check for database errors
+        if ($wpdb->last_error) {
+            return new WP_Error(
+                'database_error',
+                sprintf(__('Database error: %s', 'wp-mail-bridge'), $wpdb->last_error),
+                ['template_slug' => $slug, 'language' => $language]
+            );
+        }
+
         // Fallback to English if not found
         if (!$template && $language !== 'en') {
             $template = $wpdb->get_row($wpdb->prepare(
                 "SELECT * FROM $table WHERE template_slug = %s AND language = 'en' AND status = 'active' LIMIT 1",
                 $slug
             ));
+
+            if ($wpdb->last_error) {
+                return new WP_Error(
+                    'database_error',
+                    sprintf(__('Database error: %s', 'wp-mail-bridge'), $wpdb->last_error),
+                    ['template_slug' => $slug, 'language' => 'en']
+                );
+            }
         }
 
         // Fallback to any language
@@ -117,6 +164,14 @@ class MailBridge_Sender {
                 "SELECT * FROM $table WHERE template_slug = %s AND status = 'active' LIMIT 1",
                 $slug
             ));
+
+            if ($wpdb->last_error) {
+                return new WP_Error(
+                    'database_error',
+                    sprintf(__('Database error: %s', 'wp-mail-bridge'), $wpdb->last_error),
+                    ['template_slug' => $slug]
+                );
+            }
         }
 
         return $template;
@@ -190,21 +245,32 @@ class MailBridge_Sender {
      * @param string $template_slug Template slug
      * @param string $to           Recipient
      * @param string $subject      Email subject
+     * @return bool|WP_Error True on success, WP_Error on database failure
      */
     private function log_success($template_slug, $to, $subject) {
         global $wpdb;
         $table = $wpdb->prefix . 'mailbridge_logs';
 
-        $wpdb->insert(
+        $result = $wpdb->insert(
             $table,
-            array(
+            [
                 'template_slug' => $template_slug,
                 'recipient' => $to,
                 'subject' => $subject,
                 'status' => 'sent',
-            ),
-            array('%s', '%s', '%s', '%s')
+            ],
+            ['%s', '%s', '%s', '%s']
         );
+
+        if ($result === false) {
+            return new WP_Error(
+                'log_insert_failed',
+                sprintf(__('Failed to log success: %s', 'wp-mail-bridge'), $wpdb->last_error),
+                ['template_slug' => $template_slug, 'recipient' => $to]
+            );
+        }
+
+        return true;
     }
 
     /**
@@ -213,24 +279,32 @@ class MailBridge_Sender {
      * @param string $template_slug Template slug
      * @param string $to           Recipient
      * @param string $error        Error message
+     * @return bool|WP_Error True on success, WP_Error on database failure
      */
     private function log_error($template_slug, $to, $error) {
         global $wpdb;
         $table = $wpdb->prefix . 'mailbridge_logs';
 
-        $wpdb->insert(
+        $result = $wpdb->insert(
             $table,
-            array(
+            [
                 'template_slug' => $template_slug,
                 'recipient' => $to,
                 'subject' => '',
                 'status' => 'failed',
                 'error_message' => $error,
-            ),
-            array('%s', '%s', '%s', '%s', '%s')
+            ],
+            ['%s', '%s', '%s', '%s', '%s']
         );
 
-        // Also log to error log for debugging
-        error_log('MailBridge Error: ' . $error . ' (Template: ' . $template_slug . ', To: ' . $to . ')');
+        if ($result === false) {
+            return new WP_Error(
+                'log_insert_failed',
+                sprintf(__('Failed to log error: %s', 'wp-mail-bridge'), $wpdb->last_error),
+                ['template_slug' => $template_slug, 'recipient' => $to, 'original_error' => $error]
+            );
+        }
+
+        return true;
     }
 }

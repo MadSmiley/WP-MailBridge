@@ -38,25 +38,29 @@ class MailBridge_Registry {
      *
      * @param string $id   Email type ID
      * @param array  $args Configuration arguments
-     * @return bool
+     * @return bool|WP_Error True on success, WP_Error on failure
      */
     public static function register_email_type($id, $args = array()) {
         // Validate ID
         if (empty($id)) {
-            return false;
+            return new WP_Error(
+                'empty_email_type_id',
+                __('Email type ID cannot be empty', 'wp-mail-bridge'),
+                ['args' => $args]
+            );
         }
 
         // Default arguments
-        $defaults = array(
+        $defaults = [
             'name' => '',
             'description' => '',
-            'variables' => array(),
+            'variables' => [],
             'plugin' => '',
             'default_subject' => '',
             'default_content' => '',
-            'preview_values' => array(),
-            'languages' => array(),
-        );
+            'preview_values' => [],
+            'languages' => [],
+        ];
 
         $args = wp_parse_args($args, $defaults);
 
@@ -87,6 +91,8 @@ class MailBridge_Registry {
 
     /**
      * Sync registered types to database
+     *
+     * @return bool|WP_Error True on success, WP_Error on database failure
      */
     private function sync_to_database() {
         global $wpdb;
@@ -99,13 +105,22 @@ class MailBridge_Registry {
                 $type_id
             ));
 
+            // Check for database errors
+            if ($wpdb->last_error) {
+                return new WP_Error(
+                    'database_error',
+                    sprintf(__('Database error while checking email type: %s', 'wp-mail-bridge'), $wpdb->last_error),
+                    ['type_id' => $type_id]
+                );
+            }
+
             // Convert languages array to comma-separated string
             $languages_str = '';
             if (!empty($type_data['languages']) && is_array($type_data['languages'])) {
                 $languages_str = implode(',', $type_data['languages']);
             }
 
-            $data = array(
+            $data = [
                 'type_id' => $type_id,
                 'name' => $type_data['name'],
                 'description' => $type_data['description'],
@@ -115,32 +130,50 @@ class MailBridge_Registry {
                 'default_content' => maybe_serialize($type_data['default_content']),
                 'preview_values' => maybe_serialize($type_data['preview_values']),
                 'languages' => $languages_str,
-            );
+            ];
 
             if ($exists) {
                 // Update existing
-                $wpdb->update(
+                $result = $wpdb->update(
                     $table,
                     $data,
-                    array('type_id' => $type_id),
-                    array('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s'),
-                    array('%s')
+                    ['type_id' => $type_id],
+                    ['%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s'],
+                    ['%s']
                 );
+
+                if ($result === false) {
+                    return new WP_Error(
+                        'database_update_failed',
+                        sprintf(__('Failed to update email type in database: %s', 'wp-mail-bridge'), $wpdb->last_error),
+                        ['type_id' => $type_id]
+                    );
+                }
             } else {
                 // Insert new
-                $wpdb->insert(
+                $result = $wpdb->insert(
                     $table,
                     $data,
-                    array('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s')
+                    ['%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s']
                 );
+
+                if ($result === false) {
+                    return new WP_Error(
+                        'database_insert_failed',
+                        sprintf(__('Failed to insert email type in database: %s', 'wp-mail-bridge'), $wpdb->last_error),
+                        ['type_id' => $type_id]
+                    );
+                }
             }
         }
+
+        return true;
     }
 
     /**
      * Get email types from database
      *
-     * @return array
+     * @return array|WP_Error Array of email types on success, WP_Error on database failure
      */
     public static function get_email_types_from_db() {
         global $wpdb;
@@ -148,24 +181,32 @@ class MailBridge_Registry {
 
         $results = $wpdb->get_results("SELECT * FROM $table ORDER BY name ASC");
 
-        $types = array();
+        // Check for database errors
+        if ($wpdb->last_error) {
+            return new WP_Error(
+                'database_error',
+                sprintf(__('Database error while retrieving email types: %s', 'wp-mail-bridge'), $wpdb->last_error)
+            );
+        }
+
+        $types = [];
         foreach ($results as $row) {
             // Convert comma-separated languages string to array
-            $languages = array();
+            $languages = [];
             if (!empty($row->languages)) {
                 $languages = explode(',', $row->languages);
             }
 
-            $types[$row->type_id] = array(
+            $types[$row->type_id] = [
                 'name' => $row->name,
                 'description' => $row->description,
                 'variables' => maybe_unserialize($row->variables),
                 'plugin' => $row->plugin_name,
                 'default_subject' => maybe_unserialize($row->default_subject),
                 'default_content' => maybe_unserialize($row->default_content),
-                'preview_values' => isset($row->preview_values) ? maybe_unserialize($row->preview_values) : array(),
+                'preview_values' => isset($row->preview_values) ? maybe_unserialize($row->preview_values) : [],
                 'languages' => $languages,
-            );
+            ];
         }
 
         return $types;

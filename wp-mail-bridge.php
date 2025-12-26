@@ -79,7 +79,7 @@ register_deactivation_hook(__FILE__, 'mailbridge_deactivate');
  * @param array  $variables     Associative array of variables to replace
  * @param string $to           Recipient email address (optional, can be in variables)
  * @param string $language     Language code (optional, defaults to site language)
- * @return bool                 True on success, false on failure
+ * @return bool|WP_Error        True on success, WP_Error on failure
  */
 function mailbridge_send($template_name, $variables = array(), $to = '', $language = '') {
     $sender = new MailBridge_Sender();
@@ -105,7 +105,7 @@ function mailbridge_send($template_name, $variables = array(), $to = '', $langua
  *                                            Can be simple: array('user_name' => 'John Doe')
  *                                            Or by language: array('user_name' => array('en' => 'John Doe', 'fr' => 'Jean Dupont'))
  *                            - languages: Array of expected language codes (e.g., array('en', 'fr'))
- * @return bool               True on success, false on failure
+ * @return bool|WP_Error      True on success, WP_Error on failure
  */
 function mailbridge_register_email_type($id, $args = array()) {
     return MailBridge_Registry::register_email_type($id, $args);

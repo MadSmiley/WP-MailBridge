@@ -15,6 +15,9 @@ global $wpdb;
 $table = $wpdb->prefix . 'mailbridge_templates';
 $templates = $wpdb->get_results("SELECT * FROM $table ORDER BY template_name ASC");
 
+// Get registered email types to display variation names
+$email_types = MailBridge_Registry::get_email_types_from_db();
+
 // Handle messages
 $message = isset($_GET['message']) ? sanitize_text_field($_GET['message']) : '';
 ?>
@@ -51,7 +54,7 @@ $message = isset($_GET['message']) ? sanitize_text_field($_GET['message']) : '';
             </a>
         </div>
     <?php else: ?>
-        <table class="wp-list-table widefat fixed striped">
+        <table class="wp-list-table widefat striped">
             <thead>
                 <tr>
                     <th scope="col" class="manage-column column-name column-primary">
@@ -59,9 +62,6 @@ $message = isset($_GET['message']) ? sanitize_text_field($_GET['message']) : '';
                     </th>
                     <th scope="col" class="manage-column">
                         <?php echo esc_html__('Slug', 'wp-mail-bridge'); ?>
-                    </th>
-                    <th scope="col" class="manage-column">
-                        <?php echo esc_html__('Subject', 'wp-mail-bridge'); ?>
                     </th>
                     <th scope="col" class="manage-column">
                         <?php echo esc_html__('Language', 'wp-mail-bridge'); ?>
@@ -93,9 +93,6 @@ $message = isset($_GET['message']) ? sanitize_text_field($_GET['message']) : '';
                         <td data-colname="<?php echo esc_attr__('Slug', 'wp-mail-bridge'); ?>">
                             <code><?php echo esc_html($template->template_slug); ?></code>
                         </td>
-                        <td data-colname="<?php echo esc_attr__('Subject', 'wp-mail-bridge'); ?>">
-                            <?php echo esc_html($template->subject); ?>
-                        </td>
                         <td data-colname="<?php echo esc_attr__('Language', 'wp-mail-bridge'); ?>">
                             <?php echo esc_html($template->language); ?>
                         </td>
@@ -104,7 +101,12 @@ $message = isset($_GET['message']) ? sanitize_text_field($_GET['message']) : '';
                             if (empty($template->variation)) {
                                 echo '<em>' . esc_html__('Générique', 'wp-mail-bridge') . '</em>';
                             } else {
-                                echo esc_html($template->variation);
+                                // Try to get variation name from email type
+                                $variation_name = $template->variation;
+                                if (isset($email_types[$template->template_slug]['variations'][$template->variation])) {
+                                    $variation_name = $email_types[$template->template_slug]['variations'][$template->variation];
+                                }
+                                echo esc_html($variation_name);
                             }
                             ?>
                         </td>

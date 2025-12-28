@@ -34,18 +34,26 @@ class MailBridge_Sender {
             return $template;
         }
 
+        // Get email type to check for defaults
+        $email_type = MailBridge_Registry::get_email_type($template_slug);
+
+        // If template not found in database, try to use default content from email type
         if (!$template) {
-            $error = new WP_Error(
-                'template_not_found',
-                __('Template not found', 'wp-mail-bridge'),
-                ['template_slug' => $template_slug, 'language' => $language]
-            );
-            $this->log_error($template_slug, $to, $error->get_error_message());
-            return $error;
+            if ($email_type && !empty($email_type['default_content'])) {
+                // Create a template object from email type defaults
+                $template = $this->create_template_from_defaults($email_type, $language);
+            } else {
+                $error = new WP_Error(
+                    'template_not_found',
+                    __('Template not found and no default content available', 'wp-mail-bridge'),
+                    ['template_slug' => $template_slug, 'language' => $language]
+                );
+                $this->log_error($template_slug, $to, $error->get_error_message());
+                return $error;
+            }
         }
 
         // Validate required variables
-        $email_type = MailBridge_Registry::get_email_type($template_slug);
         if ($email_type) {
             $validation = $this->validate_variables($variables, $email_type['variables']);
             if (!$validation['valid']) {
@@ -56,7 +64,7 @@ class MailBridge_Sender {
                 $error = new WP_Error(
                     'missing_variables',
                     $error_message,
-                    array('missing_variables' => $validation['missing'], 'template_slug' => $template_slug)
+                    ['missing_variables' => $validation['missing'], 'template_slug' => $template_slug]
                 );
                 $this->log_error($template_slug, $to, $error->get_error_message());
                 return $error;
@@ -76,7 +84,7 @@ class MailBridge_Sender {
             $error = new WP_Error(
                 'no_recipient',
                 __('No recipient email provided', 'wp-mail-bridge'),
-                array('template_slug' => $template_slug)
+                ['template_slug' => $template_slug]
             );
             $this->log_error($template_slug, '', $error->get_error_message());
             return $error;
@@ -173,6 +181,71 @@ class MailBridge_Sender {
                 );
             }
         }
+
+        return $template;
+    }
+
+    /**
+     * Create a template object from email type defaults
+     *
+     * @param array  $email_type Email type configuration
+     * @param string $language   Language code
+     * @return object Template object
+     */
+    private function create_template_from_defaults($email_type, $language = '') {
+        // If no language specified, use site language
+        if (empty($language)) {
+            $language = substr(get_locale(), 0, 2);
+        }
+
+        // Get subject from defaults (can be string or array by language)
+        $subject = '';
+        if (!empty($email_type['default_subject'])) {
+            if (is_array($email_type['default_subject'])) {
+                // Try specific language first
+                if (isset($email_type['default_subject'][$language])) {
+                    $subject = $email_type['default_subject'][$language];
+                }
+                // Fallback to English
+                elseif (isset($email_type['default_subject']['en'])) {
+                    $subject = $email_type['default_subject']['en'];
+                }
+                // Fallback to first available language
+                elseif (!empty($email_type['default_subject'])) {
+                    $subject = reset($email_type['default_subject']);
+                }
+            } else {
+                $subject = $email_type['default_subject'];
+            }
+        }
+
+        // Get content from defaults (can be string or array by language)
+        $content = '';
+        if (!empty($email_type['default_content'])) {
+            if (is_array($email_type['default_content'])) {
+                // Try specific language first
+                if (isset($email_type['default_content'][$language])) {
+                    $content = $email_type['default_content'][$language];
+                }
+                // Fallback to English
+                elseif (isset($email_type['default_content']['en'])) {
+                    $content = $email_type['default_content']['en'];
+                }
+                // Fallback to first available language
+                elseif (!empty($email_type['default_content'])) {
+                    $content = reset($email_type['default_content']);
+                }
+            } else {
+                $content = $email_type['default_content'];
+            }
+        }
+
+        // Create a stdClass object similar to database result
+        $template = new stdClass();
+        $template->subject = $subject;
+        $template->content = $content;
+        $template->language = $language;
+        $template->status = 'active';
 
         return $template;
     }

@@ -211,6 +211,7 @@ class MailBridge_Admin {
         $subject = sanitize_text_field($_POST['subject']);
         $content = stripslashes(wp_kses_post($_POST['content']));
         $language = sanitize_text_field($_POST['language']);
+        $variation = sanitize_text_field($_POST['variation'] ?? '');
         $plugin_name = sanitize_text_field($_POST['plugin_name']);
         $status = sanitize_text_field($_POST['status']);
 
@@ -229,6 +230,7 @@ class MailBridge_Admin {
             'subject' => $subject,
             'content' => $content,
             'language' => $language,
+            'variation' => $variation,
             'plugin_name' => $plugin_name,
             'status' => $status,
         ];
@@ -239,7 +241,7 @@ class MailBridge_Admin {
                 $table,
                 $data,
                 ['id' => $template_id],
-                ['%s', '%s', '%s', '%s', '%s', '%s', '%s'],
+                ['%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s'],
                 ['%d']
             );
 
@@ -256,7 +258,7 @@ class MailBridge_Admin {
             $result = $wpdb->insert(
                 $table,
                 $data,
-                ['%s', '%s', '%s', '%s', '%s', '%s', '%s']
+                ['%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s']
             );
 
             if ($result === false) {

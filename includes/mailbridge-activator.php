@@ -33,12 +33,13 @@ class MailBridge_Activator {
             subject varchar(255) NOT NULL,
             content longtext NOT NULL,
             language varchar(10) DEFAULT 'en',
+            variation varchar(50) DEFAULT '',
             plugin_name varchar(100) DEFAULT NULL,
             status varchar(20) DEFAULT 'active',
             created_at datetime DEFAULT CURRENT_TIMESTAMP,
             updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             PRIMARY KEY  (id),
-            UNIQUE KEY template_slug_language (template_slug, language),
+            UNIQUE KEY template_slug_language_variation (template_slug, language, variation),
             KEY plugin_name (plugin_name)
         ) $charset_collate;";
 
@@ -56,6 +57,7 @@ class MailBridge_Activator {
             default_content longtext,
             preview_values longtext DEFAULT NULL,
             languages varchar(255) DEFAULT NULL,
+            variations longtext DEFAULT NULL,
             created_at datetime DEFAULT CURRENT_TIMESTAMP,
             updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             PRIMARY KEY  (id),

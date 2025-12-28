@@ -22,11 +22,12 @@ class MailBridge_Sender {
      * @param array  $variables     Variables to replace
      * @param string $to           Recipient email
      * @param string $language     Language code
+     * @param string $variation    Template variation key
      * @return bool|WP_Error True on success, WP_Error on failure
      */
-    public function send($template_slug, $variables = array(), $to = '', $language = '') {
+    public function send($template_slug, $variables = array(), $to = '', $language = '', $variation = '') {
         // Get template from database
-        $template = $this->get_template($template_slug, $language);
+        $template = $this->get_template($template_slug, $language, $variation);
 
         // Check for database errors
         if (is_wp_error($template)) {
@@ -41,12 +42,12 @@ class MailBridge_Sender {
         if (!$template) {
             if ($email_type && !empty($email_type['default_content'])) {
                 // Create a template object from email type defaults
-                $template = $this->create_template_from_defaults($email_type, $language);
+                $template = $this->create_template_from_defaults($email_type, $language, $variation);
             } else {
                 $error = new WP_Error(
                     'template_not_found',
                     __('Template not found and no default content available', 'wp-mail-bridge'),
-                    ['template_slug' => $template_slug, 'language' => $language]
+                    ['template_slug' => $template_slug, 'language' => $language, 'variation' => $variation]
                 );
                 $this->log_error($template_slug, $to, $error->get_error_message());
                 return $error;
@@ -119,13 +120,14 @@ class MailBridge_Sender {
     }
 
     /**
-     * Get template from database
+     * Get template from database with variation support
      *
-     * @param string $slug     Template slug
-     * @param string $language Language code
-     * @return object|WP_Error Template object on success, WP_Error on database failure
+     * @param string $slug      Template slug
+     * @param string $language  Language code
+     * @param string $variation Variation key
+     * @return object|null|WP_Error Template object on success, null if not found, WP_Error on database failure
      */
-    private function get_template($slug, $language = '') {
+    private function get_template($slug, $language = '', $variation = '') {
         global $wpdb;
         $table = $wpdb->prefix . 'mailbridge_templates';
 
@@ -134,42 +136,75 @@ class MailBridge_Sender {
             $language = substr(get_locale(), 0, 2);
         }
 
-        // Try to get template for specific language
+        // Normalize variation (NULL and empty string are both generic)
+        $variation = ($variation === null) ? '' : $variation;
+
+        // PRIORITY 1: Try exact match (slug, language, variation)
+        if (!empty($variation)) {
+            $template = $wpdb->get_row($wpdb->prepare(
+                "SELECT * FROM $table WHERE template_slug = %s AND language = %s AND variation = %s AND status = 'active' LIMIT 1",
+                $slug,
+                $language,
+                $variation
+            ));
+
+            if ($wpdb->last_error) {
+                return new WP_Error(
+                    'database_error',
+                    sprintf(__('Database error: %s', 'wp-mail-bridge'), $wpdb->last_error),
+                    ['template_slug' => $slug, 'language' => $language, 'variation' => $variation]
+                );
+            }
+
+            if ($template) {
+                return $template;
+            }
+        }
+
+        // PRIORITY 2: Try generic for same language (slug, language, variation='')
         $template = $wpdb->get_row($wpdb->prepare(
-            "SELECT * FROM $table WHERE template_slug = %s AND language = %s AND status = 'active' LIMIT 1",
+            "SELECT * FROM $table WHERE template_slug = %s AND language = %s AND variation = '' AND status = 'active' LIMIT 1",
             $slug,
             $language
         ));
 
-        // Check for database errors
         if ($wpdb->last_error) {
             return new WP_Error(
                 'database_error',
                 sprintf(__('Database error: %s', 'wp-mail-bridge'), $wpdb->last_error),
-                ['template_slug' => $slug, 'language' => $language]
+                ['template_slug' => $slug, 'language' => $language, 'variation' => '']
             );
         }
 
-        // Fallback to English if not found
-        if (!$template && $language !== 'en') {
+        if ($template) {
+            return $template;
+        }
+
+        // PRIORITY 3: Try English variation (if language != 'en' and variation provided)
+        if ($language !== 'en' && !empty($variation)) {
             $template = $wpdb->get_row($wpdb->prepare(
-                "SELECT * FROM $table WHERE template_slug = %s AND language = 'en' AND status = 'active' LIMIT 1",
-                $slug
+                "SELECT * FROM $table WHERE template_slug = %s AND language = 'en' AND variation = %s AND status = 'active' LIMIT 1",
+                $slug,
+                $variation
             ));
 
             if ($wpdb->last_error) {
                 return new WP_Error(
                     'database_error',
                     sprintf(__('Database error: %s', 'wp-mail-bridge'), $wpdb->last_error),
-                    ['template_slug' => $slug, 'language' => 'en']
+                    ['template_slug' => $slug, 'language' => 'en', 'variation' => $variation]
                 );
+            }
+
+            if ($template) {
+                return $template;
             }
         }
 
-        // Fallback to any language
-        if (!$template) {
+        // PRIORITY 4: Try English generic (if language != 'en')
+        if ($language !== 'en') {
             $template = $wpdb->get_row($wpdb->prepare(
-                "SELECT * FROM $table WHERE template_slug = %s AND status = 'active' LIMIT 1",
+                "SELECT * FROM $table WHERE template_slug = %s AND language = 'en' AND variation = '' AND status = 'active' LIMIT 1",
                 $slug
             ));
 
@@ -177,9 +212,48 @@ class MailBridge_Sender {
                 return new WP_Error(
                     'database_error',
                     sprintf(__('Database error: %s', 'wp-mail-bridge'), $wpdb->last_error),
-                    ['template_slug' => $slug]
+                    ['template_slug' => $slug, 'language' => 'en', 'variation' => '']
                 );
             }
+
+            if ($template) {
+                return $template;
+            }
+        }
+
+        // PRIORITY 5: Try any language with variation
+        if (!empty($variation)) {
+            $template = $wpdb->get_row($wpdb->prepare(
+                "SELECT * FROM $table WHERE template_slug = %s AND variation = %s AND status = 'active' LIMIT 1",
+                $slug,
+                $variation
+            ));
+
+            if ($wpdb->last_error) {
+                return new WP_Error(
+                    'database_error',
+                    sprintf(__('Database error: %s', 'wp-mail-bridge'), $wpdb->last_error),
+                    ['template_slug' => $slug, 'variation' => $variation]
+                );
+            }
+
+            if ($template) {
+                return $template;
+            }
+        }
+
+        // PRIORITY 6: Try any language generic
+        $template = $wpdb->get_row($wpdb->prepare(
+            "SELECT * FROM $table WHERE template_slug = %s AND variation = '' AND status = 'active' LIMIT 1",
+            $slug
+        ));
+
+        if ($wpdb->last_error) {
+            return new WP_Error(
+                'database_error',
+                sprintf(__('Database error: %s', 'wp-mail-bridge'), $wpdb->last_error),
+                ['template_slug' => $slug, 'variation' => '']
+            );
         }
 
         return $template;
@@ -190,54 +264,25 @@ class MailBridge_Sender {
      *
      * @param array  $email_type Email type configuration
      * @param string $language   Language code
+     * @param string $variation  Variation key
      * @return object Template object
      */
-    private function create_template_from_defaults($email_type, $language = '') {
+    private function create_template_from_defaults($email_type, $language = '', $variation = '') {
         // If no language specified, use site language
         if (empty($language)) {
             $language = substr(get_locale(), 0, 2);
         }
 
-        // Get subject from defaults (can be string or array by language)
+        // Get subject from defaults using variant-aware helper
         $subject = '';
         if (!empty($email_type['default_subject'])) {
-            if (is_array($email_type['default_subject'])) {
-                // Try specific language first
-                if (isset($email_type['default_subject'][$language])) {
-                    $subject = $email_type['default_subject'][$language];
-                }
-                // Fallback to English
-                elseif (isset($email_type['default_subject']['en'])) {
-                    $subject = $email_type['default_subject']['en'];
-                }
-                // Fallback to first available language
-                elseif (!empty($email_type['default_subject'])) {
-                    $subject = reset($email_type['default_subject']);
-                }
-            } else {
-                $subject = $email_type['default_subject'];
-            }
+            $subject = $this->get_variant_value($email_type['default_subject'], $language, $variation);
         }
 
-        // Get content from defaults (can be string or array by language)
+        // Get content from defaults using variant-aware helper
         $content = '';
         if (!empty($email_type['default_content'])) {
-            if (is_array($email_type['default_content'])) {
-                // Try specific language first
-                if (isset($email_type['default_content'][$language])) {
-                    $content = $email_type['default_content'][$language];
-                }
-                // Fallback to English
-                elseif (isset($email_type['default_content']['en'])) {
-                    $content = $email_type['default_content']['en'];
-                }
-                // Fallback to first available language
-                elseif (!empty($email_type['default_content'])) {
-                    $content = reset($email_type['default_content']);
-                }
-            } else {
-                $content = $email_type['default_content'];
-            }
+            $content = $this->get_variant_value($email_type['default_content'], $language, $variation);
         }
 
         // Create a stdClass object similar to database result
@@ -245,9 +290,73 @@ class MailBridge_Sender {
         $template->subject = $subject;
         $template->content = $content;
         $template->language = $language;
+        $template->variation = $variation;
         $template->status = 'active';
 
         return $template;
+    }
+
+    /**
+     * Get variant value from data supporting multiple formats
+     *
+     * @param mixed  $data      Data that can be string, array by language, or array by language+variation
+     * @param string $language  Language code
+     * @param string $variation Variation key
+     * @return string
+     */
+    private function get_variant_value($data, $language, $variation) {
+        if (!is_array($data)) {
+            return $data;  // Simple string value
+        }
+
+        // Try variation-specific value: ['lang' => ['variation' => 'value']]
+        if (isset($data[$language]) && is_array($data[$language])) {
+            if (!empty($variation) && isset($data[$language][$variation])) {
+                return $data[$language][$variation];
+            }
+            // Try generic for this language
+            if (isset($data[$language][''])) {
+                return $data[$language][''];
+            }
+            // If it's a simple array of variations, use first
+            if (!empty($data[$language])) {
+                return reset($data[$language]);
+            }
+        }
+
+        // Try simple language value: ['lang' => 'value']
+        if (isset($data[$language]) && !is_array($data[$language])) {
+            return $data[$language];
+        }
+
+        // Fallback to English
+        if ($language !== 'en') {
+            if (isset($data['en']) && is_array($data['en'])) {
+                if (!empty($variation) && isset($data['en'][$variation])) {
+                    return $data['en'][$variation];
+                }
+                if (isset($data['en'][''])) {
+                    return $data['en'][''];
+                }
+                if (!empty($data['en'])) {
+                    return reset($data['en']);
+                }
+            }
+            if (isset($data['en']) && !is_array($data['en'])) {
+                return $data['en'];
+            }
+        }
+
+        // Fallback to first available
+        if (!empty($data)) {
+            $first = reset($data);
+            if (is_array($first)) {
+                return !empty($first) ? reset($first) : '';
+            }
+            return $first;
+        }
+
+        return '';
     }
 
     /**

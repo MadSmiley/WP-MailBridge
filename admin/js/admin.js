@@ -43,6 +43,8 @@
                 $('#plugin_name').prop('readonly', false).css('background-color', '');
                 // Réactiver toutes les langues
                 $('#language option').prop('disabled', false).show();
+                // Réinitialiser le dropdown de variations
+                $('#variation').find('option:not([value=""])').remove();
                 // Réinitialiser les preview values
                 previewValues = {};
                 return;
@@ -54,6 +56,7 @@
             var previewValuesData = selectedOption.data('preview-values');
             var pluginName = selectedOption.data('plugin');
             var expectedLanguages = selectedOption.data('languages');
+            var variations = selectedOption.data('variations');
 
             // Stocker les valeurs par défaut brutes (peuvent être par langue)
             currentDefaultContent = defaultContent || '';
@@ -84,6 +87,29 @@
             // Auto-fill and lock plugin name
             if (pluginName) {
                 $('#plugin_name').val(pluginName).prop('readonly', true).css('background-color', '#f0f0f1');
+            }
+
+            // Populate variation dropdown
+            var $variationSelect = $('#variation');
+            var currentVariation = $variationSelect.val();
+
+            // Clear existing options except "Générique"
+            $variationSelect.find('option:not([value=""])').remove();
+
+            // Add variations from email type
+            if (variations && typeof variations === 'object') {
+                $.each(variations, function(key, name) {
+                    var option = $('<option></option>')
+                        .attr('value', key)
+                        .text(name);
+
+                    // Restore selection if editing template
+                    if (key === currentVariation) {
+                        option.prop('selected', true);
+                    }
+
+                    $variationSelect.append(option);
+                });
             }
 
             // Filter languages based on email type requirements

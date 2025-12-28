@@ -29,6 +29,7 @@ $template_slug = $template ? $template->template_slug : '';
 $subject = $template ? $template->subject : '';
 $content = $template ? $template->content : '';
 $language = $template ? $template->language : 'en';
+$variation = $template ? $template->variation : '';
 $plugin_name = $template ? $template->plugin_name : '';
 $status = $template ? $template->status : 'active';
 
@@ -93,7 +94,8 @@ $languages = array(
                                         data-variables="<?php echo esc_attr(json_encode($type_data['variables'] ?? [])); ?>"
                                         data-preview-values="<?php echo esc_attr(json_encode($type_data['preview_values'] ?? [])); ?>"
                                         data-plugin="<?php echo esc_attr($type_data['plugin'] ?? ''); ?>"
-                                        data-languages="<?php echo esc_attr(json_encode($type_data['languages'] ?? [])); ?>">
+                                        data-languages="<?php echo esc_attr(json_encode($type_data['languages'] ?? [])); ?>"
+                                        data-variations="<?php echo esc_attr(json_encode($type_data['variations'] ?? [])); ?>">
                                     <?php echo esc_html($type_data['name']); ?> (<?php echo esc_html($type_id); ?>)
                                 </option>
                             <?php endforeach; ?>
@@ -118,6 +120,23 @@ $languages = array(
                         </select>
                         <p class="description">
                             <?php echo esc_html__('Language for this template. You can create multiple versions of the same template in different languages.', 'wp-mail-bridge'); ?>
+                        </p>
+                    </td>
+                </tr>
+
+                <tr>
+                    <th scope="row">
+                        <label for="variation"><?php echo esc_html__('Variation', 'wp-mail-bridge'); ?></label>
+                    </th>
+                    <td>
+                        <select name="variation" id="variation" class="regular-text">
+                            <option value="" <?php selected($variation, ''); ?>>
+                                <?php echo esc_html__('Générique (base template)', 'wp-mail-bridge'); ?>
+                            </option>
+                            <!-- Options will be populated by JavaScript when email type is selected -->
+                        </select>
+                        <p class="description">
+                            <?php echo esc_html__('Select a variation for this template. "Générique" is the default/fallback version.', 'wp-mail-bridge'); ?>
                         </p>
                     </td>
                 </tr>

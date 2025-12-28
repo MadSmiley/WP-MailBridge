@@ -67,6 +67,9 @@ $message = isset($_GET['message']) ? sanitize_text_field($_GET['message']) : '';
                         <?php echo esc_html__('Language', 'wp-mail-bridge'); ?>
                     </th>
                     <th scope="col" class="manage-column">
+                        <?php echo esc_html__('Variation', 'wp-mail-bridge'); ?>
+                    </th>
+                    <th scope="col" class="manage-column">
                         <?php echo esc_html__('Plugin', 'wp-mail-bridge'); ?>
                     </th>
                     <th scope="col" class="manage-column">
@@ -95,6 +98,15 @@ $message = isset($_GET['message']) ? sanitize_text_field($_GET['message']) : '';
                         </td>
                         <td data-colname="<?php echo esc_attr__('Language', 'wp-mail-bridge'); ?>">
                             <?php echo esc_html($template->language); ?>
+                        </td>
+                        <td data-colname="<?php echo esc_attr__('Variation', 'wp-mail-bridge'); ?>">
+                            <?php
+                            if (empty($template->variation)) {
+                                echo '<em>' . esc_html__('Générique', 'wp-mail-bridge') . '</em>';
+                            } else {
+                                echo esc_html($template->variation);
+                            }
+                            ?>
                         </td>
                         <td data-colname="<?php echo esc_attr__('Plugin', 'wp-mail-bridge'); ?>">
                             <?php echo esc_html($template->plugin_name); ?>

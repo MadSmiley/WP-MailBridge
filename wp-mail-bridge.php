@@ -20,7 +20,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('MAILBRIDGE_VERSION', '1.0.1');
+define('MAILBRIDGE_VERSION', '1.0.2');
 define('MAILBRIDGE_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('MAILBRIDGE_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('MAILBRIDGE_PLUGIN_BASENAME', plugin_basename(__FILE__));
@@ -79,11 +79,12 @@ register_deactivation_hook(__FILE__, 'mailbridge_deactivate');
  * @param array  $variables     Associative array of variables to replace
  * @param string $to           Recipient email address (optional, can be in variables)
  * @param string $language     Language code (optional, defaults to site language)
+ * @param string $variation    Template variation key (optional, defaults to generic template)
  * @return bool|WP_Error        True on success, WP_Error on failure
  */
-function mailbridge_send($template_name, $variables = array(), $to = '', $language = '') {
+function mailbridge_send($template_name, $variables = array(), $to = '', $language = '', $variation = '') {
     $sender = new MailBridge_Sender();
-    return $sender->send($template_name, $variables, $to, $language);
+    return $sender->send($template_name, $variables, $to, $language, $variation);
 }
 
 /**
@@ -98,13 +99,17 @@ function mailbridge_send($template_name, $variables = array(), $to = '', $langua
  *                            - default_subject: Default subject line
  *                                             Can be simple: 'Welcome!'
  *                                             Or by language: array('en' => 'Welcome!', 'fr' => 'Bienvenue!')
+ *                                             Or by language+variation: array('en' => array('' => 'Default', 'admin' => 'Admin Welcome'))
  *                            - default_content: Default email content
  *                                             Can be simple: '<p>Hello...</p>'
  *                                             Or by language: array('en' => '<p>Hello...</p>', 'fr' => '<p>Bonjour...</p>')
+ *                                             Or by language+variation: array('en' => array('' => '<p>Default</p>', 'admin' => '<p>Admin</p>'))
  *                            - preview_values: Array of example values for variables
  *                                            Can be simple: array('user_name' => 'John Doe')
  *                                            Or by language: array('user_name' => array('en' => 'John Doe', 'fr' => 'Jean Dupont'))
+ *                                            Or by variation: array('user_name' => array('customer' => 'John Doe', 'admin' => 'Admin Name'))
  *                            - languages: Array of expected language codes (e.g., array('en', 'fr'))
+ *                            - variations: Array of variation keys with display names (e.g., array('admin' => 'Admin Version', 'customer' => 'Customer Version'))
  * @return bool|WP_Error      True on success, WP_Error on failure
  */
 function mailbridge_register_email_type($id, $args = array()) {

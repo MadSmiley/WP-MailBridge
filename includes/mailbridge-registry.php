@@ -60,6 +60,7 @@ class MailBridge_Registry {
             'default_content' => '',
             'preview_values' => [],
             'languages' => [],
+            'variations' => [],
         ];
 
         $args = wp_parse_args($args, $defaults);
@@ -130,6 +131,7 @@ class MailBridge_Registry {
                 'default_content' => maybe_serialize($type_data['default_content']),
                 'preview_values' => maybe_serialize($type_data['preview_values']),
                 'languages' => $languages_str,
+                'variations' => maybe_serialize($type_data['variations']),
             ];
 
             if ($exists) {
@@ -138,7 +140,7 @@ class MailBridge_Registry {
                     $table,
                     $data,
                     ['type_id' => $type_id],
-                    ['%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s'],
+                    ['%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s'],
                     ['%s']
                 );
 
@@ -154,7 +156,7 @@ class MailBridge_Registry {
                 $result = $wpdb->insert(
                     $table,
                     $data,
-                    ['%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s']
+                    ['%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s']
                 );
 
                 if ($result === false) {
@@ -206,6 +208,7 @@ class MailBridge_Registry {
                 'default_content' => maybe_unserialize($row->default_content),
                 'preview_values' => isset($row->preview_values) ? maybe_unserialize($row->preview_values) : [],
                 'languages' => $languages,
+                'variations' => isset($row->variations) ? maybe_unserialize($row->variations) : [],
             ];
         }
 
